@@ -38,13 +38,13 @@ importers:
       pg:
         specifier: ^8.16.3
         version: 8.23.1
+      prisma:
+        specifier: ^6.16.0
+        version: 6.19.3
       zod:
         specifier: ^4.1.8
         version: 4.6.5
     devDependencies:
-      prisma:
-        specifier: ^6.16.0
-        version: 6.19.3
       supertest:
         specifier: ^7.1.4
         version: 7.3.1
