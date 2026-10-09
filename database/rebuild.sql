@@ -1,7 +1,10 @@
 -- Champion Lounge database rebuild script.
 -- WARNING: this drops and recreates all application tables.
--- Run against the target database with:
---   psql "$DATABASE_URL" -f database/rebuild.sql
+-- Run once against an existing PostgreSQL database with:
+--   psql "postgresql://USER:PASSWORD@HOST:5432/DATABASE" -f database/rebuild.sql
+--
+-- If this script is used, do not also run `prisma migrate deploy` against
+-- the same database. Use either this rebuild script or Prisma migrations.
 
 BEGIN;
 

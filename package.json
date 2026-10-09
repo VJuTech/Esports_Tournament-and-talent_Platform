@@ -9,6 +9,7 @@
   },
   "scripts": {
     "dev": "node --watch src/server.js",
+    "build": "prisma generate --schema database/schema.prisma",
     "start": "node src/server.js",
     "test": "vitest run",
     "test:watch": "vitest",
