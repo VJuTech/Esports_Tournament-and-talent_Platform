@@ -2,6 +2,7 @@ const path = require('node:path');
 const express = require('express');
 const session = require('express-session');
 const PgSession = require('connect-pg-simple')(session);
+const { Pool } = require('pg');
 const helmet = require('helmet');
 const rateLimit = require('express-rate-limit');
 const env = require('./config/env');
@@ -9,6 +10,14 @@ const routes = require('./routes');
 const { notFound, errorHandler } = require('./middleware/error.middleware');
 
 const app = express();
+const databaseUrl = new URL(env.DATABASE_URL);
+const sessionPool = new Pool({
+  connectionString: env.DATABASE_URL,
+  ssl: ['localhost', '127.0.0.1', '::1'].includes(databaseUrl.hostname) ? false : { rejectUnauthorized: false },
+  connectionTimeoutMillis: 10000,
+  idleTimeoutMillis: 30000,
+  keepAlive: true
+});
 
 if (env.TRUST_PROXY === 'true') app.set('trust proxy', 1);
 app.set('view engine', 'ejs');
@@ -22,7 +31,7 @@ app.use(rateLimit({ windowMs: 15 * 60 * 1000, limit: 300, standardHeaders: 'draf
 app.use(session({
   name: 'championlounge.sid',
   store: new PgSession({
-    conString: env.DATABASE_URL,
+    pool: sessionPool,
     tableName: 'user_sessions',
     createTableIfMissing: true
   }),
@@ -46,3 +55,4 @@ app.use(notFound);
 app.use(errorHandler);
 
 module.exports = app;
+app.locals.sessionPool = sessionPool;

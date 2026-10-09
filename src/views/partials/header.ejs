@@ -15,7 +15,7 @@
     <nav class="main-nav" aria-label="Main navigation">
       <a href="/home">Home</a>
       <a href="/tournaments">Tournaments</a>
-      <% if (currentUser) { %>
+      <% if (typeof currentUser !== 'undefined' && currentUser) { %>
         <% if (currentUser.emailVerifiedAt) { %><a href="/dashboard">Dashboard</a><a href="/profile">Profile</a><% if (['SUPER_ADMIN', 'TOURNAMENT_MANAGER'].includes(currentUser.role)) { %><a href="/admin">Manage</a><% } %><% } %>
         <form class="nav-form" method="post" action="/auth/logout"><button class="nav-link" type="submit">Log out</button></form>
       <% } else { %>

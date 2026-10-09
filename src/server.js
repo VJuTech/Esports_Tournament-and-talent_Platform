@@ -18,6 +18,7 @@ async function startServer() {
       }
 
       await disconnectDatabase();
+      await app.locals.sessionPool.end();
     });
   };
 
