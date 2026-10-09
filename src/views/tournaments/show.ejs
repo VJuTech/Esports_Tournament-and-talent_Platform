@@ -1,9 +1,6 @@
-<%- include('../partials/header', { title }) %>
-<h1><%= tournament.name %></h1>
-<p><%= tournament.description || 'Tournament details will be published soon.' %></p>
-<dl>
-  <dt>Game</dt><dd><%= tournament.game.name %></dd>
-  <dt>Registration deadline</dt><dd><%= tournament.registrationDeadline.toISOString() %></dd>
-  <dt>Entry fee</dt><dd><%= tournament.entryFee %></dd>
-</dl>
-<%- include('../partials/footer') %>
+<%- include('../partials/dashboard-header', { title, active: 'tournaments' }) %>
+<a class="back-link" href="/tournaments">← All tournaments</a>
+<section class="tournament-hero"><div><span class="eyebrow"><%= tournament.game.name %> · <%= tournament.status %></span><h1><%= tournament.name %></h1><p><%= tournament.description || 'A structured competition built for serious players.' %></p></div><div class="tournament-code"><span>Competition code</span><strong><%= tournament.code %></strong></div></section>
+<% if (error) { %><p class="alert alert-error"><%= error %></p><% } %>
+<section class="detail-layout"><div><div class="detail-panel"><div class="detail-heading"><span class="eyebrow">Competition brief</span><h2>Everything you need to know</h2></div><dl class="detail-list"><div><dt>Format</dt><dd><%= tournament.format %> · <%= tournament.participationType.toLowerCase() %></dd></div><div><dt>Entry</dt><dd><%= tournament.entryFee %> <%= tournament.currency %></dd></div><div><dt>Registration</dt><dd><%= tournament.registrationOpensAt.toLocaleString() %> — <%= tournament.registrationDeadline.toLocaleString() %></dd></div><div><dt>Schedule</dt><dd><%= tournament.startsAt.toLocaleString() %> — <%= tournament.endsAt.toLocaleString() %></dd></div><div><dt>Capacity</dt><dd><%= tournament._count.registrations %> / <%= tournament.capacity %> places</dd></div></dl></div><div class="detail-panel text-block"><h2>Rules and eligibility</h2><p><%= tournament.eligibilityRequirements || 'Eligibility requirements will be confirmed by the tournament manager.' %></p><h3>Scoring</h3><p><%= tournament.scoringRules || 'Scoring rules will be published before the competition begins.' %></p><h3>Terms and disputes</h3><p><%= tournament.terms || 'Published tournament terms apply.' %></p></div></div><aside class="register-panel"><span class="eyebrow">Ready to play?</span><h2>Claim your place.</h2><p>Review the details before registering. Your place is subject to eligibility review and payment confirmation.</p><% if (currentUser?.emailVerifiedAt) { %><form method="post" action="/registrations"><input type="hidden" name="tournamentId" value="<%= tournament.id %>"><% if (tournament.participationType === 'TEAM') { %><label for="teamId">Eligible team</label><select id="teamId" name="teamId" required><option value="">Select your team</option><% teams.forEach((team) => { %><option value="<%= team.id %>"><%= team.name %></option><% }) %></select><% } %><button class="button" type="submit">Start registration <span>→</span></button></form><% } else { %><a class="button" href="/auth/login">Sign in to register <span>→</span></a><% } %></aside></section>
+<%- include('../partials/dashboard-footer') %>

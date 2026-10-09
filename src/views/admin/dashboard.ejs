@@ -1,4 +1,5 @@
-<%- include('../partials/header', { title }) %>
-<h1>Administration</h1>
-<p>Authorized management tools will appear here.</p>
-<%- include('../partials/footer') %>
+<%- include('../partials/dashboard-header', { title, active: 'manage' }) %>
+<section class="dashboard-welcome"><div><span class="dashboard-kicker">Operations studio</span><h1>Shape the competition.</h1><p>Manage the games, formats, and tournament calendar that power Champion Lounge.</p></div><a class="dashboard-primary" href="/admin/tournaments/new">Create tournament <span>+</span></a></section>
+<section class="dashboard-stat-grid management-stat-grid"><article><span>Management surface</span><strong>02</strong><small>Game and tournament tools</small></article><article><span>Access level</span><strong>✓</strong><small><%= currentUser.role.replaceAll('_', ' ') %></small></article><article><span>Historical record</span><strong>∞</strong><small>Preserved by design</small></article></section>
+<section class="management-dashboard-grid"><a class="management-dashboard-card" href="/admin/games"><span class="dashboard-card-index">01</span><div><h2>Game catalogue</h2><p>Create, refine, activate, or deactivate supported games without erasing historical tournaments.</p><strong>Manage games <span>→</span></strong></div></a><a class="management-dashboard-card" href="/admin/tournaments"><span class="dashboard-card-index">02</span><div><h2>Tournaments</h2><p>Configure complete competition briefs, publish only when ready, and control every state transition.</p><strong>Manage tournaments <span>→</span></strong></div></a></section>
+<%- include('../partials/dashboard-footer') %>

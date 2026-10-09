@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title><%= title %> | Champion Lounge</title>
+  <link rel="stylesheet" href="/css/app.css">
+</head>
+<body class="dashboard-body">
+  <div class="dashboard-app">
+    <aside class="dashboard-sidebar">
+      <a class="dashboard-logo" href="/"><span class="brand-mark">CL</span><span><strong>Champion</strong><small>Lounge</small></span></a>
+      <div class="dashboard-game-select"><span class="game-icon">C</span><span>All competitions</span><span>⌄</span></div>
+      <p class="sidebar-label">Navigate</p>
+      <nav class="dashboard-nav">
+        <a class="<%= active === 'dashboard' ? 'active' : '' %>" href="/dashboard"><span>⌂</span>Dashboard</a>
+        <a class="<%= active === 'tournaments' ? 'active' : '' %>" href="/tournaments"><span>◈</span>Tournaments</a>
+        <a class="<%= active === 'profile' ? 'active' : '' %>" href="/profile"><span>◉</span>My profile</a>
+        <% if (currentUser) { %><a class="<%= active === 'registrations' ? 'active' : '' %>" href="/registrations"><span>▣</span>Registrations</a><% } %>
+        <% if (currentUser && ['SUPER_ADMIN', 'TOURNAMENT_MANAGER'].includes(currentUser.role)) { %>
+          <a class="<%= active === 'manage' ? 'active' : '' %>" href="/admin"><span>◆</span>Management</a>
+        <% } %>
+      </nav>
+      <p class="sidebar-label">Your space</p>
+      <nav class="dashboard-nav">
+        <a href="/tournaments"><span>♛</span>Leaderboards</a>
+        <a href="/dashboard"><span>◌</span>Notifications</a>
+        <a href="/dashboard"><span>▣</span>Rewards</a>
+      </nav>
+      <div class="sidebar-spacer"></div>
+      <nav class="dashboard-nav dashboard-help"><a href="/home"><span>?</span>Support</a></nav>
+      <div class="dashboard-user"><span class="dashboard-avatar"><%= currentUser ? currentUser.email.slice(0, 1).toUpperCase() : 'G' %></span><span><strong><%= currentUser ? currentUser.email : 'Guest player' %></strong><small><%= currentUser ? currentUser.role.replaceAll('_', ' ') : 'Explore Champion Lounge' %></small></span><span>⚙</span></div>
+    </aside>
+    <main class="dashboard-main">
+      <header class="dashboard-topbar"><button class="dashboard-menu" type="button" aria-label="Toggle navigation">☰</button><label class="dashboard-search"><span>⌕</span><input type="search" placeholder="Search competitions, players, games"></label><div class="dashboard-top-actions"><span class="top-status"><i></i>Live platform</span><span class="top-divider"></span><a href="/profile">◉</a><form method="post" action="/auth/logout"><button type="submit">↗</button></form></div></header>
+      <div class="dashboard-content">

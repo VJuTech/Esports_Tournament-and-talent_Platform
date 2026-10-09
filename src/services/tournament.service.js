@@ -1,7 +1,3 @@
-const { prisma } = require('../config/database');
+const { findTournamentById } = require('../models/tournament.model');
 
-function getTournament(id) {
-  return prisma.tournament.findUnique({ where: { id }, include: { game: true } });
-}
-
-module.exports = { getTournament };
+module.exports = { getTournament: findTournamentById };

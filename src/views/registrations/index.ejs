@@ -1,0 +1,6 @@
+<%- include('../partials/dashboard-header', { title, active: 'dashboard' }) %>
+<section class="page-intro page-intro-small"><span class="eyebrow">Your competition identity</span><h1>Registration history</h1><p>Track eligibility, payment, confirmation, and your immutable tournament number for every competition.</p></section>
+<section class="registration-list"><% if (!registrations.length) { %><div class="bracket-empty registration-empty"><span class="eyebrow">No registrations yet</span><h2>Your next competition starts here.</h2><p>Explore published competitions and reserve your place.</p><a class="button" href="/tournaments">Explore tournaments</a></div><% } else { registrations.forEach((registration) => { %>
+<article class="registration-card"><div><span class="eyebrow"><%= registration.tournament.game.name %></span><h2><%= registration.tournament.name %></h2><p><%= registration.tournament.code %> · Registered <%= new Date(registration.createdAt).toLocaleDateString() %></p></div><div class="registration-card-status"><span class="status-pill"><%= registration.status %></span><span class="payment-status">Payment: <%= registration.payment?.status || 'PENDING' %></span><a href="/registrations/<%= registration.id %>">View details →</a></div></article>
+<% }) } %></section>
+<%- include('../partials/dashboard-footer') %>

@@ -1,0 +1,24 @@
+<%- include('../../partials/dashboard-header', { title, active: 'manage' }) %>
+<a class="back-link" href="/admin/tournaments">← Tournament management</a>
+<section class="competition-heading">
+  <div><span class="eyebrow"><%= tournament.game.name %> · <%= tournament.status %></span><h1><%= tournament.name %></h1><p class="muted">Competition management workspace · <%= tournament.format %></p></div>
+  <div class="competition-actions"><a class="button button-secondary" href="/admin/tournaments/<%= tournament.id %>/edit">Edit settings</a><a class="button" href="/tournaments/<%= tournament.id %>">View public page</a></div>
+</section>
+<section class="competition-toolbar"><div><strong><%= matches.length %></strong><span>matches scheduled</span></div><div><strong><%= tournament._count.registrations %>/<%= tournament.capacity %></strong><span>registered players</span></div><div><strong><%= tournament.status.replaceAll('_', ' ') %></strong><span>competition status</span></div></section>
+<% if (!matches.length) { %>
+  <section class="bracket-empty"><div class="bracket-empty-icon">◎</div><span class="eyebrow">Bracket workspace</span><h2>Matches will appear here once the bracket is generated.</h2><p>Participant registration and match scheduling are stored in the database. This view will display each round, score, status, and scheduled time as officials create the competition.</p></section>
+<% } else { %>
+  <section class="bracket-shell"><div class="bracket-scroll"><div class="bracket-grid">
+    <% const rounds = [...new Set(matches.map((match) => match.round))]; rounds.forEach((round, roundIndex) => { %>
+      <div class="bracket-round"><div class="bracket-round-title"><span><%= roundIndex === rounds.length - 1 ? 'Grand final' : `Round ${round}` %></span><small><%= matches.filter((match) => match.round === round).length %> matches</small></div><div class="bracket-round-matches">
+        <% matches.filter((match) => match.round === round).forEach((match) => { const result = match.result || {}; const players = Array.isArray(result.players) ? result.players : []; %>
+          <article class="bracket-match"><div class="bracket-match-meta"><span class="<%= match.status === 'LIVE' ? 'live-label' : '' %>"><%= match.status %></span><span><%= match.scheduledAt ? match.scheduledAt.toLocaleString() : 'Schedule pending' %></span></div>
+          <% if (players.length) { players.slice(0, 2).forEach((player) => { %><div class="bracket-player"><span><%= player.name || 'Participant' %></span><strong><%= player.score ?? '—' %></strong></div><% }) %><% } else { %><div class="bracket-player"><span>Participant pending</span><strong>—</strong></div><div class="bracket-player"><span>Participant pending</span><strong>—</strong></div><% } %>
+          <a class="bracket-match-link" href="#match-<%= match.id %>">Open match <span>→</span></a></article>
+        <% }) %>
+      </div></div>
+    <% }) %>
+  </div></div></section>
+<% } %>
+<section class="detail-panel participant-panel"><div class="detail-heading"><div><span class="eyebrow">Official participant list</span><h2>Registered players</h2></div><span class="muted"><%= tournament.registrations.length %> records</span></div><% if (!tournament.registrations.length) { %><p class="muted">No registrations have been recorded for this competition.</p><% } else { %><div class="participant-list"><% tournament.registrations.forEach((registration) => { %><div class="participant-row"><div><strong><%= registration.user.displayName %></strong><small><%= registration.user.email %></small></div><span><%= registration.tournamentNumber || 'Number pending' %></span><b class="status-pill"><%= registration.status %></b></div><% }) %></div><% } %></section>
+<%- include('../../partials/dashboard-footer') %>

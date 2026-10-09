@@ -5,8 +5,8 @@ const { connectDatabase, disconnectDatabase } = require('./config/database');
 async function startServer() {
   await connectDatabase();
 
-  const server = app.listen(env.PORT, () => {
-    console.log(`Server listening on port ${env.PORT}`);
+  const server = app.listen(env.PORT, env.HOST, () => {
+    console.log(`Server listening on ${env.HOST}:${env.PORT}`);
   });
 
   const shutdown = async (signal) => {

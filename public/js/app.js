@@ -1,1 +1,7 @@
-// Client-side enhancements belong here; business rules remain server-side.
+const menuButton = document.querySelector('.dashboard-menu');
+
+if (menuButton) {
+  menuButton.addEventListener('click', () => {
+    document.body.classList.toggle('sidebar-open');
+  });
+}

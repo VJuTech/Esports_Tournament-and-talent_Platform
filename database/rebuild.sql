@@ -12,8 +12,8 @@ DROP TABLE IF EXISTS "PasswordResetToken", "EmailVerificationToken", "GameProfil
   "AuditLog", "TeamMember", "Team", "Ranking", "Match", "Receipt",
   "Registration", "Payment", "Tournament", "Game", "User" CASCADE;
 
-DROP TYPE IF EXISTS "AccountStatus", "UserRole", "TournamentStatus",
-  "RegistrationStatus", "PaymentStatus" CASCADE;
+DROP TYPE IF EXISTS "ParticipationType", "AccountStatus", "UserRole",
+  "TournamentStatus", "RegistrationStatus", "PaymentStatus" CASCADE;
 
 CREATE TYPE "UserRole" AS ENUM (
   'PLAYER',
@@ -35,13 +35,17 @@ CREATE TYPE "TournamentStatus" AS ENUM (
 
 CREATE TYPE "RegistrationStatus" AS ENUM (
   'PENDING',
+  'WAITLISTED',
   'CONFIRMED',
   'REFUNDED',
-  'CANCELLED'
+  'CANCELLED',
+  'REJECTED'
 );
 
 CREATE TYPE "PaymentStatus" AS ENUM (
   'PENDING',
+  'PROCESSING',
+  'SUCCESSFUL',
   'VERIFIED',
   'FAILED',
   'REFUNDED'
@@ -51,6 +55,11 @@ CREATE TYPE "AccountStatus" AS ENUM (
   'ACTIVE',
   'SUSPENDED',
   'DISABLED'
+);
+
+CREATE TYPE "ParticipationType" AS ENUM (
+  'INDIVIDUAL',
+  'TEAM'
 );
 
 CREATE TABLE "User" (
@@ -78,7 +87,14 @@ CREATE TABLE "Game" (
   "id" TEXT NOT NULL,
   "name" TEXT NOT NULL,
   "slug" TEXT NOT NULL,
+  "description" TEXT,
+  "supportedMode" TEXT,
+  "imageUrl" TEXT,
+  "rulesUrl" TEXT,
+  "formats" JSONB,
   "isActive" BOOLEAN NOT NULL DEFAULT true,
+  "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  "updatedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
   CONSTRAINT "Game_pkey" PRIMARY KEY ("id")
 );
 
@@ -91,12 +107,29 @@ CREATE TABLE "Tournament" (
   "name" TEXT NOT NULL,
   "description" TEXT,
   "format" TEXT NOT NULL,
+  "participationType" "ParticipationType" NOT NULL DEFAULT 'INDIVIDUAL',
   "entryFee" DECIMAL(12,2) NOT NULL,
+  "currency" VARCHAR(3) NOT NULL,
+  "registrationOpensAt" TIMESTAMP(3) NOT NULL,
   "registrationDeadline" TIMESTAMP(3) NOT NULL,
   "startsAt" TIMESTAMP(3) NOT NULL,
+  "endsAt" TIMESTAMP(3) NOT NULL,
   "capacity" INTEGER NOT NULL,
+  "eligibilityMinimumAge" INTEGER,
+  "eligibilityRequirements" TEXT,
+  "scoringRules" TEXT,
+  "matchDurationMinutes" INTEGER,
+  "schedulingRules" TEXT,
+  "reportingRules" TEXT,
+  "prizeInformation" TEXT,
+  "refundPolicy" TEXT,
+  "terms" TEXT,
+  "disputeDeadline" TIMESTAMP(3),
   "status" "TournamentStatus" NOT NULL DEFAULT 'DRAFT',
   "gameId" TEXT NOT NULL,
+  "createdById" TEXT NOT NULL,
+  "publishedAt" TIMESTAMP(3),
+  "nextTournamentNumber" INTEGER NOT NULL DEFAULT 1,
   "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
   "updatedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
   CONSTRAINT "Tournament_pkey" PRIMARY KEY ("id")
@@ -105,6 +138,8 @@ CREATE TABLE "Tournament" (
 CREATE UNIQUE INDEX "Tournament_code_key" ON "Tournament"("code");
 CREATE INDEX "Tournament_status_registrationDeadline_idx"
   ON "Tournament"("status", "registrationDeadline");
+CREATE INDEX "Tournament_gameId_status_idx"
+  ON "Tournament"("gameId", "status");
 
 CREATE TABLE "Payment" (
   "id" TEXT NOT NULL,
@@ -122,11 +157,17 @@ CREATE UNIQUE INDEX "Payment_providerReference_key"
 
 CREATE TABLE "Registration" (
   "id" TEXT NOT NULL,
-  "tournamentNumber" TEXT NOT NULL,
+  "tournamentNumber" TEXT,
   "status" "RegistrationStatus" NOT NULL DEFAULT 'PENDING',
   "userId" TEXT NOT NULL,
   "tournamentId" TEXT NOT NULL,
   "paymentId" TEXT,
+  "teamId" TEXT,
+  "feeAmount" DECIMAL(12,2) NOT NULL,
+  "feeCurrency" VARCHAR(3) NOT NULL,
+  "confirmedAt" TIMESTAMP(3),
+  "cancelledAt" TIMESTAMP(3),
+  "cancellationReason" TEXT,
   "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
   CONSTRAINT "Registration_pkey" PRIMARY KEY ("id")
 );
@@ -137,6 +178,8 @@ CREATE UNIQUE INDEX "Registration_paymentId_key"
   ON "Registration"("paymentId");
 CREATE UNIQUE INDEX "Registration_tournamentId_userId_key"
   ON "Registration"("tournamentId", "userId");
+CREATE INDEX "Registration_tournamentId_status_idx"
+  ON "Registration"("tournamentId", "status");
 
 CREATE TABLE "Receipt" (
   "id" TEXT NOT NULL,
@@ -255,6 +298,9 @@ CREATE INDEX "PasswordResetToken_userId_expiresAt_idx"
 ALTER TABLE "Tournament"
   ADD CONSTRAINT "Tournament_gameId_fkey"
   FOREIGN KEY ("gameId") REFERENCES "Game"("id")
+  ON DELETE RESTRICT ON UPDATE CASCADE,
+  ADD CONSTRAINT "Tournament_createdById_fkey"
+  FOREIGN KEY ("createdById") REFERENCES "User"("id")
   ON DELETE RESTRICT ON UPDATE CASCADE;
 
 ALTER TABLE "Registration"
@@ -266,6 +312,9 @@ ALTER TABLE "Registration"
   ON DELETE RESTRICT ON UPDATE CASCADE,
   ADD CONSTRAINT "Registration_paymentId_fkey"
   FOREIGN KEY ("paymentId") REFERENCES "Payment"("id")
+  ON DELETE SET NULL ON UPDATE CASCADE,
+  ADD CONSTRAINT "Registration_teamId_fkey"
+  FOREIGN KEY ("teamId") REFERENCES "Team"("id")
   ON DELETE SET NULL ON UPDATE CASCADE;
 
 ALTER TABLE "Receipt"
@@ -321,5 +370,25 @@ ALTER TABLE "PasswordResetToken"
   ADD CONSTRAINT "PasswordResetToken_userId_fkey"
   FOREIGN KEY ("userId") REFERENCES "User"("id")
   ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- TEST-ONLY ADMIN ACCOUNT.
+-- Remove this seed before using rebuild.sql for production data.
+INSERT INTO "User" (
+  "id",
+  "email",
+  "passwordHash",
+  "displayName",
+  "role",
+  "accountStatus",
+  "emailVerifiedAt"
+) VALUES (
+  '00000000-0000-4000-8000-000000000001',
+  'admin.testing@championlounge.test',
+  '$2b$12$L3ZETJSLGfqFS6FKMSz6oelcc07WQ2IF6PEmBbsDidBh4cMrd6MCy',
+  'Test Administrator',
+  'SUPER_ADMIN',
+  'ACTIVE',
+  CURRENT_TIMESTAMP
+);
 
 COMMIT;

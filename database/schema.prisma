@@ -27,13 +27,17 @@ enum TournamentStatus {
 
 enum RegistrationStatus {
   PENDING
+  WAITLISTED
   CONFIRMED
   REFUNDED
   CANCELLED
+  REJECTED
 }
 
 enum PaymentStatus {
   PENDING
+  PROCESSING
+  SUCCESSFUL
   VERIFIED
   FAILED
   REFUNDED
@@ -43,6 +47,11 @@ enum AccountStatus {
   ACTIVE
   SUSPENDED
   DISABLED
+}
+
+enum ParticipationType {
+  INDIVIDUAL
+  TEAM
 }
 
 model User {
@@ -68,6 +77,7 @@ model User {
   gameProfiles  GameProfile[]
   passwordResetTokens PasswordResetToken[]
   emailVerificationTokens EmailVerificationToken[]
+  createdTournaments Tournament[] @relation("CreatedTournaments")
 }
 
 model GameProfile {
@@ -104,49 +114,82 @@ model PasswordResetToken {
 }
 
 model Game {
-  id          String       @id @default(uuid())
-  name        String       @unique
-  slug        String       @unique
-  isActive    Boolean      @default(true)
+  id            String       @id @default(uuid())
+  name          String       @unique
+  slug          String       @unique
+  description   String?
+  supportedMode String?
+  imageUrl      String?
+  rulesUrl      String?
+  formats       Json?
+  isActive      Boolean      @default(true)
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
   tournaments Tournament[]
   teams       Team[]
   profiles    GameProfile[]
 }
 
 model Tournament {
-  id                   String            @id @default(uuid())
-  code                 String            @unique
-  name                 String
-  description          String?
-  format               String
-  entryFee             Decimal           @db.Decimal(12, 2)
-  registrationDeadline DateTime
-  startsAt             DateTime
-  capacity             Int
-  status               TournamentStatus @default(DRAFT)
-  gameId               String
-  game                 Game              @relation(fields: [gameId], references: [id])
-  registrations        Registration[]
-  matches              Match[]
-  rankings             Ranking[]
-  createdAt            DateTime          @default(now())
-  updatedAt            DateTime          @updatedAt
+  id                      String            @id @default(uuid())
+  code                    String            @unique
+  name                    String
+  description             String?
+  format                  String
+  participationType       ParticipationType @default(INDIVIDUAL)
+  entryFee                Decimal           @db.Decimal(12, 2)
+  currency                String            @db.VarChar(3)
+  registrationOpensAt     DateTime
+  registrationDeadline    DateTime
+  startsAt                DateTime
+  endsAt                  DateTime
+  capacity                Int
+  eligibilityMinimumAge   Int?
+  eligibilityRequirements String?
+  scoringRules            String?
+  matchDurationMinutes    Int?
+  schedulingRules         String?
+  reportingRules          String?
+  prizeInformation        String?
+  refundPolicy            String?
+  terms                   String?
+  disputeDeadline         DateTime?
+  status                  TournamentStatus @default(DRAFT)
+  gameId                  String
+  createdById              String
+  publishedAt              DateTime?
+  nextTournamentNumber     Int               @default(1)
+  game                    Game              @relation(fields: [gameId], references: [id])
+  createdBy                User              @relation("CreatedTournaments", fields: [createdById], references: [id])
+  registrations           Registration[]
+  matches                 Match[]
+  rankings                Ranking[]
+  createdAt               DateTime          @default(now())
+  updatedAt               DateTime          @updatedAt
   @@index([status, registrationDeadline])
 }
 
 model Registration {
   id               String             @id @default(uuid())
-  tournamentNumber String             @unique
+  tournamentNumber String?            @unique
   status           RegistrationStatus @default(PENDING)
   userId           String
   tournamentId     String
   paymentId        String?            @unique
+  teamId           String?
+  feeAmount        Decimal           @db.Decimal(12, 2)
+  feeCurrency      String             @db.VarChar(3)
+  confirmedAt      DateTime?
+  cancelledAt      DateTime?
+  cancellationReason String?
   user             User               @relation(fields: [userId], references: [id])
   tournament       Tournament         @relation(fields: [tournamentId], references: [id])
   payment          Payment?           @relation(fields: [paymentId], references: [id])
+  team             Team?              @relation(fields: [teamId], references: [id])
   receipt          Receipt?
   createdAt        DateTime           @default(now())
   @@unique([tournamentId, userId])
+  @@index([tournamentId, status])
 }
 
 model Payment {
@@ -197,6 +240,7 @@ model Team {
   gameId    String
   game      Game         @relation(fields: [gameId], references: [id])
   members   TeamMember[]
+  registrations Registration[]
   createdAt DateTime     @default(now())
 }
 

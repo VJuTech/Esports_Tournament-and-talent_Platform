@@ -1,9 +1,9 @@
-<%- include('../partials/header', { title }) %>
-<h1>Upcoming tournaments</h1>
-<% if (!tournaments.length) { %><p>No tournaments are currently published.</p><% } %>
-<ul>
+<%- include('../partials/dashboard-header', { title, active: 'tournaments' }) %>
+<section class="page-intro page-intro-small"><span class="eyebrow">Find your next arena</span><h1>Compete with purpose.</h1><p>Explore published competitions with clear formats, deadlines, rules, and entry details before you commit.</p></section>
+<% if (!tournaments.length) { %><div class="empty-state">No tournaments are currently published. Check back soon.</div><% } %>
+<div class="tournament-grid">
   <% tournaments.forEach((tournament) => { %>
-    <li><a href="/tournaments/<%= tournament.id %>"><%= tournament.name %></a> — <%= tournament.game.name %></li>
+    <a class="tournament-card" href="/tournaments/<%= tournament.id %>"><div class="tournament-card-top"><span class="status-pill"><%= tournament.status %></span><span><%= tournament.game.name %></span></div><h2><%= tournament.name %></h2><p><%= tournament.description || 'A structured competition for ambitious players.' %></p><div class="tournament-card-meta"><span><strong><%= tournament.format %></strong> format</span><span><strong><%= tournament.entryFee %> <%= tournament.currency %></strong> entry</span></div></a>
   <% }) %>
-</ul>
-<%- include('../partials/footer') %>
+</div>
+<%- include('../partials/dashboard-footer') %>
