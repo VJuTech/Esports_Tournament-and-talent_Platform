@@ -383,8 +383,8 @@ INSERT INTO "User" (
   "emailVerifiedAt"
 ) VALUES (
   '00000000-0000-4000-8000-000000000001',
-  'admin.testing@championlounge.test',
-  '$2b$12$L3ZETJSLGfqFS6FKMSz6oelcc07WQ2IF6PEmBbsDidBh4cMrd6MCy',
+  'admin@championlounge.com',
+  '$2b$12$ekNbeWjBYp4sEHmjy8c28eskvyAz6talw2IxxuBFT3ExTUkQQkcqu',
   'Test Administrator',
   'SUPER_ADMIN',
   'ACTIVE',
