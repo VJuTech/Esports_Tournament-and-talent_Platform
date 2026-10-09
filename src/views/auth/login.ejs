@@ -1,0 +1,14 @@
+<%- include('../partials/header', { title }) %>
+<section class="auth-shell">
+  <div class="auth-aside auth-aside-compact"><span class="eyebrow">Welcome back</span><h1>Ready when you are.</h1><p>Your next win is closer than you think.</p></div>
+  <div class="auth-card"><span class="eyebrow">Sign in</span><h2>Return to the arena</h2>
+    <% if (error) { %><p class="alert alert-error" role="alert"><%= error %></p><% } %>
+    <form method="post" action="/auth/login" class="form-grid">
+      <label>Email address<input id="email" name="email" type="email" required autocomplete="email"></label>
+      <label>Password<input id="password" name="password" type="password" required minlength="8" autocomplete="current-password"></label>
+      <button class="button" type="submit">Sign in <span>→</span></button>
+    </form>
+    <div class="form-links"><a href="/auth/forgot-password">Forgot password?</a><a href="/auth/register">Create an account</a></div>
+  </div>
+</section>
+<%- include('../partials/footer') %>

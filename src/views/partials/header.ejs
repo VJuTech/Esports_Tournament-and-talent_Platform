@@ -1,0 +1,26 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title><%= title %> | Champion Lounge</title>
+  <link rel="stylesheet" href="/css/app.css">
+</head>
+<body>
+  <header class="site-header">
+    <a class="brand" href="/" aria-label="Champion Lounge home">
+      <span class="brand-mark">CL</span>
+      <span><strong>Champion</strong><small>Lounge</small></span>
+    </a>
+    <nav class="main-nav" aria-label="Main navigation">
+      <a href="/home">Home</a>
+      <a href="/tournaments">Tournaments</a>
+      <% if (currentUser) { %>
+        <% if (currentUser.emailVerifiedAt) { %><a href="/dashboard">Dashboard</a><a href="/profile">Profile</a><% } %>
+        <form class="nav-form" method="post" action="/auth/logout"><button class="nav-link" type="submit">Log out</button></form>
+      <% } else { %>
+        <a href="/auth/login">Sign in</a><a class="nav-cta" href="/auth/register">Join the lounge</a>
+      <% } %>
+    </nav>
+  </header>
+  <main class="container">

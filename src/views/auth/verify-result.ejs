@@ -1,0 +1,3 @@
+<%- include('../partials/header', { title }) %>
+<section class="message-card"><span class="eyebrow"><%= success ? 'Verified' : 'Link expired' %></span><h1><%= success ? 'You are cleared to compete.' : 'We could not verify that link.' %></h1><p><%= success ? 'Your email is confirmed. Sign in to access your dashboard and profile.' : 'Request a new account verification email or contact support.' %></p><a class="button" href="/auth/login">Continue</a></section>
+<%- include('../partials/footer') %>

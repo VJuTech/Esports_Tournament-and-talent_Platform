@@ -1,0 +1,9 @@
+<%- include('../partials/header', { title }) %>
+<h1>Upcoming tournaments</h1>
+<% if (!tournaments.length) { %><p>No tournaments are currently published.</p><% } %>
+<ul>
+  <% tournaments.forEach((tournament) => { %>
+    <li><a href="/tournaments/<%= tournament.id %>"><%= tournament.name %></a> — <%= tournament.game.name %></li>
+  <% }) %>
+</ul>
+<%- include('../partials/footer') %>

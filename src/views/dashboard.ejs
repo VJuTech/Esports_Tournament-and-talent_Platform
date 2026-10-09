@@ -1,0 +1,9 @@
+<%- include('partials/header', { title }) %>
+<section class="page-intro page-intro-small"><span class="eyebrow">Your command centre</span><h1>Welcome back, <%= profile.displayName %>.</h1><p>Your competitive record, tournament activity, and opportunities belong here.</p><a class="button" href="/profile">Edit profile <span>→</span></a></section>
+<section class="dashboard-grid">
+  <article class="dashboard-card"><span class="card-label">Participation</span><strong><%= profile.registrations.length %></strong><p>Tournament registrations</p><a href="/tournaments">Find your next match →</a></article>
+  <article class="dashboard-card"><span class="card-label">Verified results</span><strong><%= profile.rankings.length %></strong><p>Rankings on record</p><a href="/profile">View your record →</a></article>
+  <article class="dashboard-card"><span class="card-label">Game profiles</span><strong><%= profile.gameProfiles.length %></strong><p>Connected identities</p><a href="/profile">Add a game →</a></article>
+</section>
+<section class="record-section"><div><span class="eyebrow">Recent activity</span><h2>Your tournament history</h2></div><% if (!profile.registrations.length) { %><p class="empty-state">Your first registration will appear here.</p><% } else { %><div class="record-list"><% profile.registrations.slice(0, 5).forEach((registration) => { %><div class="record-row"><div><strong><%= registration.tournament.name %></strong><span><%= registration.tournamentNumber %></span></div><b class="status-pill"><%= registration.status %></b></div><% }) %></div><% } %></section>
+<%- include('partials/footer') %>

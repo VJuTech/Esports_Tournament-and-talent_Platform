@@ -1,0 +1,16 @@
+<%- include('../partials/header', { title }) %>
+<section class="auth-shell">
+  <div class="auth-aside"><span class="eyebrow">Enter the arena</span><h1>Your next chapter starts here.</h1><p>Create one trusted profile for every tournament, result, and opportunity ahead.</p></div>
+  <div class="auth-card"><span class="eyebrow">Create account</span><h2>Join Champion Lounge</h2>
+    <% if (error) { %><p class="alert alert-error" role="alert"><%= error %></p><% } %>
+    <form method="post" action="/auth/register" class="form-grid">
+      <label>Display name<input name="displayName" required minlength="2" maxlength="80" autocomplete="name"></label>
+      <label>Email address<input name="email" type="email" required autocomplete="email"></label>
+      <label>Country<input name="country" required maxlength="80" autocomplete="country-name"></label>
+      <label>Password<input name="password" type="password" required minlength="8" autocomplete="new-password"></label>
+      <button class="button" type="submit">Create my account <span>→</span></button>
+    </form>
+    <p class="form-footnote">Already registered? <a href="/auth/login">Sign in</a></p>
+  </div>
+</section>
+<%- include('../partials/footer') %>

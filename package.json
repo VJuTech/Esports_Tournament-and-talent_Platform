@@ -1,0 +1,38 @@
+{
+  "name": "esports-tournament-and-talent-platform",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Tournament management and esports talent platform",
+  "packageManager": "pnpm@9.15.0",
+  "engines": {
+    "node": ">=20.0.0"
+  },
+  "scripts": {
+    "dev": "node --watch src/server.js",
+    "start": "node src/server.js",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "db:generate": "prisma generate --schema database/schema.prisma",
+    "db:migrate": "prisma migrate deploy --schema database/schema.prisma",
+    "db:migrate:dev": "prisma migrate dev --schema database/schema.prisma",
+    "db:studio": "prisma studio --schema database/schema.prisma"
+  },
+  "dependencies": {
+    "@prisma/client": "^6.16.0",
+    "bcryptjs": "^3.0.2",
+    "connect-pg-simple": "^10.0.0",
+    "dotenv": "^17.2.2",
+    "ejs": "^3.1.10",
+    "express": "^5.1.0",
+    "express-rate-limit": "^8.1.0",
+    "express-session": "^1.18.2",
+    "helmet": "^8.1.0",
+    "pg": "^8.16.3",
+    "zod": "^4.1.8"
+  },
+  "devDependencies": {
+    "prisma": "^6.16.0",
+    "supertest": "^7.1.4",
+    "vitest": "^3.2.4"
+  }
+}

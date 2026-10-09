@@ -1,0 +1,9 @@
+<%- include('../partials/header', { title }) %>
+<h1><%= tournament.name %></h1>
+<p><%= tournament.description || 'Tournament details will be published soon.' %></p>
+<dl>
+  <dt>Game</dt><dd><%= tournament.game.name %></dd>
+  <dt>Registration deadline</dt><dd><%= tournament.registrationDeadline.toISOString() %></dd>
+  <dt>Entry fee</dt><dd><%= tournament.entryFee %></dd>
+</dl>
+<%- include('../partials/footer') %>
