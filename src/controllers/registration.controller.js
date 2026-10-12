@@ -19,25 +19,16 @@ async function create(req, res, next) {
       if (existing) throw new Error('You are already registered for this tournament');
       const count = await tx.registration.count({ where: { tournamentId: tournament.id, status: { in: ['PENDING', 'CONFIRMED'] } } });
       if (count >= tournament.capacity) throw new Error('Tournament capacity has been reached');
-      const payment = await tx.payment.create({
-        data: {
-          providerReference: `REG-${tournament.code}-${req.session.user.id}-${Date.now()}`,
-          amount: tournament.entryFee,
-          currency: tournament.currency,
-          status: 'PENDING'
-        }
-      }, { isolationLevel: 'Serializable' });
       return tx.registration.create({
         data: {
           tournamentId: tournament.id,
           userId: req.session.user.id,
           status: 'PENDING',
-          paymentId: payment.id,
           teamId,
           feeAmount: tournament.entryFee,
           feeCurrency: tournament.currency
         }
-      });
+      }, { isolationLevel: 'Serializable' });
     });
     return res.redirect(`/registrations/${registration.id}`);
   } catch (error) {
@@ -52,7 +43,7 @@ async function history(req, res, next) {
   try {
     const registrations = await prisma.registration.findMany({
       where: { userId: req.session.user.id },
-      include: { tournament: { include: { game: true } }, payment: true, receipt: true },
+      include: { tournament: { include: { game: true } }, payment: true, paymentAttempts: true, receipt: true },
       orderBy: { createdAt: 'desc' }
     });
     return res.render('registrations/index', { title: 'Registration history', registrations });
@@ -65,7 +56,7 @@ async function show(req, res, next) {
   try {
     const registration = await prisma.registration.findFirst({
       where: { id: req.params.id, userId: req.session.user.id },
-      include: { tournament: { include: { game: true } }, payment: true, receipt: true }
+      include: { tournament: { include: { game: true } }, payment: true, paymentAttempts: true, receipt: true }
     });
     if (!registration) return res.status(404).render('404', { title: 'Registration not found' });
     return res.render('registrations/show', { title: 'Registration details', registration, error: req.query.error || null });

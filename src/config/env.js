@@ -10,6 +10,8 @@ const schema = z.object({
   DATABASE_URL: z.string().min(1, 'DATABASE_URL is required'),
   SESSION_SECRET: z.string().min(32, 'SESSION_SECRET must contain at least 32 characters'),
   APP_URL: z.string().url().default('http://localhost:3000'),
+  COMPANY_NAME: z.string().default('Champion Lounge'),
+  COMPANY_CONTACT: z.string().default('support@championlounge.com'),
   TRUST_PROXY: z.enum(['true', 'false']).default('false'),
   PAYMENT_PROVIDER_URL: z.string().url().optional().or(z.literal('')),
   PAYMENT_PROVIDER_SECRET: z.string().optional().or(z.literal('')),

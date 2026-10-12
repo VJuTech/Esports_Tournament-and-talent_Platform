@@ -40,6 +40,7 @@ enum PaymentStatus {
   SUCCESSFUL
   VERIFIED
   FAILED
+  ABANDONED
   REFUNDED
 }
 
@@ -185,6 +186,7 @@ model Registration {
   user             User               @relation(fields: [userId], references: [id])
   tournament       Tournament         @relation(fields: [tournamentId], references: [id])
   payment          Payment?           @relation(fields: [paymentId], references: [id])
+  paymentAttempts  PaymentAttempt[]
   team             Team?              @relation(fields: [teamId], references: [id])
   receipt          Receipt?
   createdAt        DateTime           @default(now())
@@ -203,12 +205,68 @@ model Payment {
   registration      Registration?
 }
 
+model PaymentAttempt {
+  id                String        @id @default(uuid())
+  registrationId    String
+  providerReference String        @unique
+  amount            Decimal       @db.Decimal(12, 2)
+  currency          String        @db.VarChar(3)
+  provider          String
+  status            PaymentStatus @default(PENDING)
+  checkoutUrl       String?
+  providerPayload   Json?
+  failureReason     String?
+  verifiedAt        DateTime?
+  createdAt         DateTime      @default(now())
+  updatedAt         DateTime      @updatedAt
+  registration      Registration  @relation(fields: [registrationId], references: [id])
+  @@index([registrationId, status])
+}
+
 model Receipt {
   id             String       @id @default(uuid())
   receiptNumber  String       @unique
   issuedAt       DateTime     @default(now())
   registrationId String       @unique
+  companyName    String?
+  companyContact String?
+  playerName     String?
+  tournamentName String?
+  tournamentNumber String?
+  description    String?
+  amount         Decimal?     @db.Decimal(12, 2)
+  currency       String?      @db.VarChar(3)
+  paymentDate    DateTime?
+  paymentReference String?
+  status         String       @default("PAID")
   registration   Registration @relation(fields: [registrationId], references: [id])
+  deliveries     ReceiptDeliveryAttempt[]
+  adjustments    ReceiptAdjustment[]
+}
+
+model ReceiptDeliveryAttempt {
+  id          String   @id @default(uuid())
+  receiptId   String
+  channel     String
+  status      String
+  recipient   String
+  error       String?
+  sentAt      DateTime?
+  createdAt   DateTime @default(now())
+  receipt     Receipt  @relation(fields: [receiptId], references: [id])
+  @@index([receiptId, createdAt])
+}
+
+model ReceiptAdjustment {
+  id          String   @id @default(uuid())
+  receiptId   String
+  type        String
+  reference   String
+  amount      Decimal? @db.Decimal(12, 2)
+  currency    String?
+  reason      String?
+  createdAt   DateTime @default(now())
+  receipt     Receipt  @relation(fields: [receiptId], references: [id])
 }
 
 model Match {

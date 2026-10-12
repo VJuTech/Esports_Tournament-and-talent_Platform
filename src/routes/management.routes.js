@@ -1,12 +1,18 @@
 const express = require('express');
+const adminController = require('../controllers/admin.controller');
 const gameController = require('../controllers/game.controller');
 const tournamentController = require('../controllers/management.controller');
+const financeController = require('../controllers/finance.controller');
 const { requireRole } = require('../middleware/auth.middleware');
 
 const router = express.Router();
 const managersOnly = requireRole('SUPER_ADMIN', 'TOURNAMENT_MANAGER');
+const financeOnly = requireRole('SUPER_ADMIN', 'TOURNAMENT_MANAGER', 'FINANCE_OFFICER');
 
+router.get('/payments', financeOnly, financeController.index);
+router.post('/payments/:id/refund', financeOnly, financeController.refund);
 router.use(managersOnly);
+router.get('/', adminController.dashboard);
 router.get('/games', gameController.index);
 router.get('/games/new', gameController.newGame);
 router.post('/games', gameController.create);

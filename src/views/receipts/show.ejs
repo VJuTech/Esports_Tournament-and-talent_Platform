@@ -1,0 +1,10 @@
+<%- include('../partials/dashboard-header', { title, active: 'registrations' }) %>
+<a class="back-link" href="/registrations/<%= receipt.registrationId %>">← Registration details</a>
+<section class="receipt-paper">
+  <div class="receipt-heading"><div><span class="eyebrow"><%= receipt.companyName || 'Champion Lounge' %></span><h1>Official tournament payment receipt</h1></div><span class="receipt-paid"><%= receipt.status %></span></div>
+  <div class="receipt-number-row"><span>Receipt number</span><strong><%= receipt.receiptNumber %></strong></div>
+  <div class="receipt-fields"><div><span>Player</span><strong><%= receipt.playerName %></strong></div><div><span>Tournament</span><strong><%= receipt.tournamentName %></strong></div><div><span>Tournament number</span><strong><%= receipt.tournamentNumber || 'Pending' %></strong></div><div><span>Description</span><strong><%= receipt.description %></strong></div><div><span>Amount paid</span><strong><%= receipt.currency %> <%= receipt.amount %></strong></div><div><span>Payment date</span><strong><%= receipt.paymentDate ? new Date(receipt.paymentDate).toLocaleString() : '—' %></strong></div><div><span>Payment reference</span><strong><%= receipt.paymentReference %></strong></div><div><span>Issue date</span><strong><%= new Date(receipt.issuedAt).toLocaleString() %></strong></div></div>
+  <div class="receipt-actions"><a class="button" href="/receipts/<%= receipt.id %>/pdf">Download PDF</a><form method="post" action="/receipts/<%= receipt.id %>/deliver"><button class="button button-secondary" type="submit">Retry email delivery</button></form></div>
+  <div class="receipt-delivery"><h2>Delivery history</h2><% if (!receipt.deliveries.length) { %><p class="muted">Email delivery has not been attempted.</p><% } else { receipt.deliveries.forEach((delivery) => { %><div><span><%= delivery.channel %> · <%= delivery.status %></span><small><%= new Date(delivery.createdAt).toLocaleString() %><%= delivery.error ? ` · ${delivery.error}` : '' %></small></div><% }) } %></div>
+</section>
+<%- include('../partials/dashboard-footer') %>

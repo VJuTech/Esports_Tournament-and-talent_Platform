@@ -20,6 +20,9 @@
         <% if (currentUser && ['SUPER_ADMIN', 'TOURNAMENT_MANAGER'].includes(currentUser.role)) { %>
           <a class="<%= active === 'manage' ? 'active' : '' %>" href="/admin"><span>◆</span>Management</a>
         <% } %>
+        <% if (currentUser && ['SUPER_ADMIN', 'TOURNAMENT_MANAGER', 'FINANCE_OFFICER'].includes(currentUser.role)) { %>
+          <a class="<%= active === 'finance' ? 'active' : '' %>" href="/admin/payments"><span>₦</span>Finance</a>
+        <% } %>
       </nav>
       <p class="sidebar-label">Your space</p>
       <nav class="dashboard-nav">

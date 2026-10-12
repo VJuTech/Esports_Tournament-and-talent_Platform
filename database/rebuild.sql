@@ -10,7 +10,8 @@ BEGIN;
 
 DROP TABLE IF EXISTS "PasswordResetToken", "EmailVerificationToken", "GameProfile",
   "AuditLog", "TeamMember", "Team", "Ranking", "Match", "Receipt",
-  "Registration", "Payment", "Tournament", "Game", "User" CASCADE;
+  "ReceiptAdjustment", "ReceiptDeliveryAttempt", "PaymentAttempt", "Registration",
+  "Payment", "Tournament", "Game", "User" CASCADE;
 
 DROP TYPE IF EXISTS "ParticipationType", "AccountStatus", "UserRole",
   "TournamentStatus", "RegistrationStatus", "PaymentStatus" CASCADE;
@@ -48,6 +49,7 @@ CREATE TYPE "PaymentStatus" AS ENUM (
   'SUCCESSFUL',
   'VERIFIED',
   'FAILED',
+  'ABANDONED',
   'REFUNDED'
 );
 
@@ -155,6 +157,28 @@ CREATE TABLE "Payment" (
 CREATE UNIQUE INDEX "Payment_providerReference_key"
   ON "Payment"("providerReference");
 
+CREATE TABLE "PaymentAttempt" (
+  "id" TEXT NOT NULL,
+  "registrationId" TEXT NOT NULL,
+  "providerReference" TEXT NOT NULL,
+  "amount" DECIMAL(12,2) NOT NULL,
+  "currency" VARCHAR(3) NOT NULL,
+  "provider" TEXT NOT NULL,
+  "status" "PaymentStatus" NOT NULL DEFAULT 'PENDING',
+  "checkoutUrl" TEXT,
+  "providerPayload" JSONB,
+  "failureReason" TEXT,
+  "verifiedAt" TIMESTAMP(3),
+  "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  "updatedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  CONSTRAINT "PaymentAttempt_pkey" PRIMARY KEY ("id")
+);
+
+CREATE UNIQUE INDEX "PaymentAttempt_providerReference_key"
+  ON "PaymentAttempt"("providerReference");
+CREATE INDEX "PaymentAttempt_registrationId_status_idx"
+  ON "PaymentAttempt"("registrationId", "status");
+
 CREATE TABLE "Registration" (
   "id" TEXT NOT NULL,
   "tournamentNumber" TEXT,
@@ -186,11 +210,49 @@ CREATE TABLE "Receipt" (
   "receiptNumber" TEXT NOT NULL,
   "issuedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
   "registrationId" TEXT NOT NULL,
+  "companyName" TEXT,
+  "companyContact" TEXT,
+  "playerName" TEXT,
+  "tournamentName" TEXT,
+  "tournamentNumber" TEXT,
+  "description" TEXT,
+  "amount" DECIMAL(12,2),
+  "currency" VARCHAR(3),
+  "paymentDate" TIMESTAMP(3),
+  "paymentReference" TEXT,
+  "status" TEXT NOT NULL DEFAULT 'PAID',
   CONSTRAINT "Receipt_pkey" PRIMARY KEY ("id")
 );
 
 CREATE UNIQUE INDEX "Receipt_receiptNumber_key" ON "Receipt"("receiptNumber");
 CREATE UNIQUE INDEX "Receipt_registrationId_key" ON "Receipt"("registrationId");
+
+CREATE TABLE "ReceiptDeliveryAttempt" (
+  "id" TEXT NOT NULL,
+  "receiptId" TEXT NOT NULL,
+  "channel" TEXT NOT NULL,
+  "status" TEXT NOT NULL,
+  "recipient" TEXT NOT NULL,
+  "error" TEXT,
+  "sentAt" TIMESTAMP(3),
+  "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  CONSTRAINT "ReceiptDeliveryAttempt_pkey" PRIMARY KEY ("id")
+);
+
+CREATE INDEX "ReceiptDeliveryAttempt_receiptId_createdAt_idx"
+  ON "ReceiptDeliveryAttempt"("receiptId", "createdAt");
+
+CREATE TABLE "ReceiptAdjustment" (
+  "id" TEXT NOT NULL,
+  "receiptId" TEXT NOT NULL,
+  "type" TEXT NOT NULL,
+  "reference" TEXT NOT NULL,
+  "amount" DECIMAL(12,2),
+  "currency" VARCHAR(3),
+  "reason" TEXT,
+  "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  CONSTRAINT "ReceiptAdjustment_pkey" PRIMARY KEY ("id")
+);
 
 CREATE TABLE "Match" (
   "id" TEXT NOT NULL,
@@ -317,9 +379,24 @@ ALTER TABLE "Registration"
   FOREIGN KEY ("teamId") REFERENCES "Team"("id")
   ON DELETE SET NULL ON UPDATE CASCADE;
 
+ALTER TABLE "PaymentAttempt"
+  ADD CONSTRAINT "PaymentAttempt_registrationId_fkey"
+  FOREIGN KEY ("registrationId") REFERENCES "Registration"("id")
+  ON DELETE RESTRICT ON UPDATE CASCADE;
+
 ALTER TABLE "Receipt"
   ADD CONSTRAINT "Receipt_registrationId_fkey"
   FOREIGN KEY ("registrationId") REFERENCES "Registration"("id")
+  ON DELETE RESTRICT ON UPDATE CASCADE;
+
+ALTER TABLE "ReceiptDeliveryAttempt"
+  ADD CONSTRAINT "ReceiptDeliveryAttempt_receiptId_fkey"
+  FOREIGN KEY ("receiptId") REFERENCES "Receipt"("id")
+  ON DELETE RESTRICT ON UPDATE CASCADE;
+
+ALTER TABLE "ReceiptAdjustment"
+  ADD CONSTRAINT "ReceiptAdjustment_receiptId_fkey"
+  FOREIGN KEY ("receiptId") REFERENCES "Receipt"("id")
   ON DELETE RESTRICT ON UPDATE CASCADE;
 
 ALTER TABLE "Match"
