@@ -1,0 +1,4 @@
+<%- include('../partials/dashboard-header', { title, active: 'tournaments' }) %>
+<section class="page-intro"><span class="eyebrow">The catalogue</span><h1>Choose your arena.</h1><p>Explore the games and formats that power verified Champion Lounge competitions.</p></section>
+<section class="feature-grid"><% games.forEach((game) => { %><article class="feature-card"><span class="eyebrow"><%= game.supportedMode || 'Competitive' %></span><h2><%= game.name %></h2><p><%= game.description || 'Official tournaments and player pathways.' %></p><a class="text-link dark-link" href="/tournaments">View tournaments →</a></article><% }) %></section>
+<%- include('../partials/dashboard-footer') %>

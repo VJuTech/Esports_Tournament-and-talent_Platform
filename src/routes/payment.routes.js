@@ -6,5 +6,6 @@ const router = express.Router();
 router.post('/checkout/:registrationId', requireVerified, controller.checkout);
 router.get('/return', requireVerified, controller.paymentReturn);
 router.post('/webhook', controller.webhook);
+router.post('/webhooks/:provider', controller.webhook);
 
 module.exports = router;

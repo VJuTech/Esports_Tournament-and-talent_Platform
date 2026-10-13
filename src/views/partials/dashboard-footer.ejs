@@ -1,7 +1,26 @@
       </div>
+    <%- include('global-footer') %>
     </main>
     <aside class="dashboard-rail">
-      <div class="rail-heading"><strong>Activity</strong><span>•••</span></div>
+      <% const canManageOperations = currentUser && ['SUPER_ADMIN', 'TOURNAMENT_MANAGER', 'FINANCE_OFFICER'].includes(currentUser.role); %>
+      <div class="rail-heading">
+        <strong>Activity</strong>
+        <div class="activity-menu">
+          <button class="activity-menu-button" type="button" aria-expanded="false" aria-controls="activity-menu-list" aria-label="Open activity actions">•••</button>
+          <div class="activity-menu-list" id="activity-menu-list" hidden>
+            <% if (canManageOperations) { %>
+              <a href="/admin/tournaments">Tournament operations</a>
+              <a href="/admin/payments">Payment reconciliation</a>
+              <a href="/admin/reports/registrations.csv">Export registrations</a>
+              <% if (currentUser.role === 'SUPER_ADMIN') { %><a href="/admin/audit-logs">Audit logs</a><% } %>
+            <% } else { %>
+              <a href="/notifications">View notifications</a>
+              <a href="/profile">Update player profile</a>
+              <a href="/tournaments">Explore tournaments</a>
+            <% } %>
+          </div>
+        </div>
+      </div>
       <div class="rail-empty"><span class="rail-empty-icon">◌</span><strong>Your activity feed</strong><p>Updates from your competitions and verified record will appear here.</p></div>
       <div class="rail-card"><span class="eyebrow">Active quests</span><strong>Build your record</strong><p>Complete your profile and join your next tournament.</p><a href="/profile">View progress →</a></div>
     </aside>

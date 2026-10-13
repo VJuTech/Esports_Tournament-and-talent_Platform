@@ -10,6 +10,14 @@ describe('application foundation', () => {
     const response = await request(app).get('/');
     expect(response.status).toBe(200);
     expect(response.text).toContain('Champion Lounge');
+    expect(response.text).toContain('All rights reserved');
+    expect(response.text).not.toContain('>01<');
+  });
+
+  it('serves footer policy pages', async () => {
+    const response = await request(app).get('/privacy');
+    expect(response.status).toBe(200);
+    expect(response.text).toContain('Privacy policy');
   });
 
   it('protects the player dashboard', async () => {

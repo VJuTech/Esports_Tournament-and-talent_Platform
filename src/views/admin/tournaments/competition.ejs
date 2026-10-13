@@ -20,5 +20,15 @@
     <% }) %>
   </div></div></section>
 <% } %>
+<section class="detail-panel">
+  <div class="detail-heading"><div><span class="eyebrow">Fixture builder</span><h2>Schedule a verified match</h2></div></div>
+  <form class="form-grid form-grid-two" method="post" action="/admin/tournaments/<%= tournament.id %>/matches">
+    <label>Round<input type="number" name="round" min="1" value="1" required></label>
+    <label>Scheduled time<input type="datetime-local" name="scheduledAt"></label>
+    <label>Participant one<select name="participantIds" required><option value="">Select participant</option><% tournament.registrations.filter((registration) => registration.status === 'CONFIRMED').forEach((registration) => { %><option value="<%= registration.userId %>"><%= registration.user.displayName %></option><% }) %></select></label>
+    <label>Participant two<select name="participantIds" required><option value="">Select participant</option><% tournament.registrations.filter((registration) => registration.status === 'CONFIRMED').forEach((registration) => { %><option value="<%= registration.userId %>"><%= registration.user.displayName %></option><% }) %></select></label>
+    <button class="button" type="submit">Create scheduled match</button>
+  </form>
+</section>
 <section class="detail-panel participant-panel"><div class="detail-heading"><div><span class="eyebrow">Official participant list</span><h2>Registered players</h2></div><span class="muted"><%= tournament.registrations.length %> records</span></div><% if (!tournament.registrations.length) { %><p class="muted">No registrations have been recorded for this competition.</p><% } else { %><div class="participant-list"><% tournament.registrations.forEach((registration) => { %><div class="participant-row"><div><strong><%= registration.user.displayName %></strong><small><%= registration.user.email %></small></div><span><%= registration.tournamentNumber || 'Number pending' %></span><b class="status-pill"><%= registration.status %></b></div><% }) %></div><% } %></section>
 <%- include('../../partials/dashboard-footer') %>

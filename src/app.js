@@ -27,7 +27,7 @@ app.use(helmet());
 app.use(express.json({
   limit: '1mb',
   verify: (req, res, buffer) => {
-    if (req.originalUrl === '/payments/webhook') req.rawBody = buffer;
+    if (req.path.startsWith('/payments/webhook') || req.path.startsWith('/webhooks/payments/')) req.rawBody = buffer;
   }
 }));
 app.use(express.urlencoded({ extended: false, limit: '1mb' }));
@@ -54,6 +54,14 @@ app.use(session({
 app.use((req, res, next) => {
   res.locals.currentUser = req.session.user || null;
   next();
+});
+app.get('/health', async (req, res) => {
+  try {
+    await require('./config/database').prisma.$queryRaw`SELECT 1`;
+    return res.status(200).json({ status: 'ok', database: 'connected' });
+  } catch (error) {
+    return res.status(503).json({ status: 'error', database: 'unavailable' });
+  }
 });
 app.use(routes);
 app.use(notFound);

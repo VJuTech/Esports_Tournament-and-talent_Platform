@@ -1,0 +1,4 @@
+<%- include('../partials/dashboard-header', { title, active: 'dashboard' }) %>
+<section class="page-intro page-intro-small"><span class="eyebrow">Your inbox</span><h1>Stay in the loop.</h1><p>Essential service updates are retained in your account. Promotional preferences remain separate.</p></section>
+<section class="record-list"><% if (!notifications.length) { %><div class="dashboard-empty"><strong>No notifications yet.</strong><p>Competition updates and scouting decisions will appear here.</p></div><% } else { notifications.forEach((notification) => { %><article class="record-row"><div><strong><%= notification.subject %></strong><span><%= notification.body %></span></div><b class="status-pill"><%= notification.status %></b></article><% }) } %></section>
+<%- include('../partials/dashboard-footer') %>

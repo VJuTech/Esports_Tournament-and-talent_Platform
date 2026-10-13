@@ -13,6 +13,8 @@ const schema = z.object({
   COMPANY_NAME: z.string().default('Champion Lounge'),
   COMPANY_CONTACT: z.string().default('support@championlounge.com'),
   TRUST_PROXY: z.enum(['true', 'false']).default('false'),
+  DATABASE_CONNECT_RETRIES: z.coerce.number().int().min(1).max(10).default(5),
+  DATABASE_CONNECT_RETRY_DELAY_MS: z.coerce.number().int().min(250).max(30000).default(2000),
   PAYMENT_PROVIDER_URL: z.string().url().optional().or(z.literal('')),
   PAYMENT_PROVIDER_SECRET: z.string().optional().or(z.literal('')),
   EMAIL_PROVIDER_URL: z.string().url().optional().or(z.literal('')),
@@ -25,4 +27,18 @@ if (!result.success) {
   throw new Error(`Invalid environment configuration: ${details}`);
 }
 
-module.exports = result.data;
+function configureDatabaseUrl(databaseUrl) {
+  const url = new URL(databaseUrl);
+  const isLocalDatabase = ['localhost', '127.0.0.1', '::1'].includes(url.hostname);
+
+  if (!isLocalDatabase && !url.searchParams.has('sslmode')) {
+    url.searchParams.set('sslmode', 'require');
+  }
+
+  return url.toString();
+}
+
+const env = { ...result.data, DATABASE_URL: configureDatabaseUrl(result.data.DATABASE_URL) };
+process.env.DATABASE_URL = env.DATABASE_URL;
+
+module.exports = env;

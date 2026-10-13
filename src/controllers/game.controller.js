@@ -21,6 +21,10 @@ async function index(req, res, next) {
   }
 }
 
+async function publicIndex(req, res, next) {
+  try { return res.render('games/index', { title: 'Supported games', games: await listGames(false) }); } catch (error) { return next(error); }
+}
+
 async function newGame(req, res) {
   return res.render('admin/games/form', { title: 'Add a game', game: null, error: null });
 }
@@ -72,4 +76,4 @@ async function toggle(req, res, next) {
   }
 }
 
-module.exports = { index, newGame, edit, create, update, toggle };
+module.exports = { index, publicIndex, newGame, edit, create, update, toggle };

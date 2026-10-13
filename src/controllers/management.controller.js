@@ -153,4 +153,18 @@ async function competition(req, res, next) {
   }
 }
 
-module.exports = { index, newTournament, edit, create, update, transition, competition };
+async function createMatch(req, res, next) {
+  try {
+    const tournament = await prisma.tournament.findUnique({ where: { id: req.params.id }, include: { registrations: { where: { status: 'CONFIRMED' } } } });
+    if (!tournament) return res.status(404).send('Tournament not found');
+    const participantIds = Array.isArray(req.body.participantIds) ? req.body.participantIds : [req.body.participantIds].filter(Boolean);
+    if (participantIds.length < 2 || participantIds.length > 2) return res.status(400).send('A match requires two eligible participants');
+    const eligible = tournament.registrations.every((registration) => participantIds.includes(registration.userId));
+    if (!eligible) return res.status(400).send('Participants must have confirmed registrations');
+    const match = await prisma.match.create({ data: { tournamentId: tournament.id, round: Number(req.body.round) || 1, scheduledAt: req.body.scheduledAt ? new Date(req.body.scheduledAt) : null, status: 'SCHEDULED', participants: { create: participantIds.map((userId, seed) => ({ userId, seed: seed + 1 })) } } });
+    await prisma.auditLog.create({ data: { actorId: req.session.user.id, action: 'MATCH_CREATED', entity: 'Match', entityId: match.id, metadata: { tournamentId: tournament.id } } });
+    return res.redirect(`/admin/tournaments/${tournament.id}/competition`);
+  } catch (error) { return next(error); }
+}
+
+module.exports = { index, newTournament, edit, create, update, transition, competition, createMatch };

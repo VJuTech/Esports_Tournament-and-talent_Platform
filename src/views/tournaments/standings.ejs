@@ -1,0 +1,4 @@
+<%- include('../partials/dashboard-header', { title, active: 'tournaments' }) %>
+<section class="page-intro page-intro-small"><span class="eyebrow"><%= tournament.game.name %> · Official leaderboard</span><h1><%= tournament.name %></h1><p>Only verified match results affect this published ranking.</p></section>
+<section class="admin-table"><div class="admin-table-head"><span>Rank</span><span>Player</span><span>Points</span><span>Status</span></div><% if (!rankings.length) { %><div class="admin-empty">No verified results have been published yet.</div><% } else { rankings.forEach((ranking) => { %><div class="admin-table-row"><strong>#<%= ranking.position %></strong><strong><%= ranking.user.displayName %></strong><span><%= ranking.score %></span><b class="status-pill">VERIFIED</b></div><% }) } %></section>
+<%- include('../partials/dashboard-footer') %>

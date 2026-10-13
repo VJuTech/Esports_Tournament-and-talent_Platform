@@ -30,6 +30,16 @@ HTTP routes delegate to controllers. Controllers call services and models; servi
 
 The Prisma schema is in `database/schema.prisma`, and the shared Prisma connection is in `database/connect.js`. Database operational scripts and migration history are kept under `database/`. Use Prisma migrations rather than editing production schema manually.
 
+The application has no in-memory application-data fallback. PostgreSQL is required for accounts,
+registrations, payments, receipts, matches, standings, scouting, teams, notifications, and audit
+records. Deploy `pnpm db:migrate` as a controlled Render release step before starting the web
+service. The `/health` endpoint checks both the service and database connection.
+
+At startup, the service retries temporary PostgreSQL reachability failures (`P1001`) five times
+with incremental delays before exiting. Configure `DATABASE_CONNECT_RETRIES` and
+`DATABASE_CONNECT_RETRY_DELAY_MS` in the deployment environment when a different retry window is
+needed. This does not bypass the database requirement.
+
 ## Testing
 
 ```bash

@@ -2,9 +2,105 @@ generator client {
   provider = "prisma-client-js"
 }
 
+model MatchParticipant {
+  id        String @id @default(uuid())
+  matchId   String
+  userId    String
+  seed      Int?
+  match     Match @relation(fields: [matchId], references: [id], onDelete: Cascade)
+  user      User @relation(fields: [userId], references: [id])
+  @@unique([matchId, userId])
+}
+
+model MatchResult {
+  id            String @id @default(uuid())
+  matchId       String
+  submittedById String
+  approvedById  String?
+  scores        Json
+  status        String @default("SUBMITTED")
+  evidenceUrl   String?
+  submittedAt   DateTime @default(now())
+  approvedAt    DateTime?
+  match         Match @relation(fields: [matchId], references: [id], onDelete: Cascade)
+  submittedBy   User @relation("SubmittedResults", fields: [submittedById], references: [id])
+  approvedBy    User? @relation("ApprovedResults", fields: [approvedById], references: [id])
+  @@index([matchId, status])
+}
+
 datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
+}
+
+model TeamMembership {
+  id        String   @id @default(uuid())
+  teamId    String
+  userId    String
+  status    String
+  joinedAt  DateTime @default(now())
+  departedAt DateTime?
+  notes     String?
+  team      Team @relation(fields: [teamId], references: [id])
+  user      User @relation(fields: [userId], references: [id])
+  @@index([teamId, status])
+  @@index([userId, joinedAt])
+}
+
+model ScoutingEvaluation {
+  id           String   @id @default(uuid())
+  playerId     String
+  scoutId      String
+  gameId       String?
+  tournamentId String?
+  rating       Int
+  strengths    String?
+  concerns     String?
+  notes        String?
+  visibility   String   @default("INTERNAL")
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  player       User @relation("EvaluatedPlayer", fields: [playerId], references: [id])
+  scout        User @relation("ScoutEvaluations", fields: [scoutId], references: [id])
+  game         Game? @relation(fields: [gameId], references: [id])
+  tournament   Tournament? @relation(fields: [tournamentId], references: [id])
+  @@index([playerId, createdAt])
+}
+
+model SelectionDecision {
+  id           String   @id @default(uuid())
+  playerId     String
+  decisionById String
+  cycle        String
+  status       String
+  criteria     String
+  notes        String?
+  decidedAt    DateTime @default(now())
+  player       User @relation("SelectionCandidate", fields: [playerId], references: [id])
+  decisionBy   User @relation("SelectionDecisionMaker", fields: [decisionById], references: [id])
+  tournament   Tournament? @relation(fields: [tournamentId], references: [id])
+  tournamentId String?
+  @@index([playerId, decidedAt])
+}
+
+model Notification {
+  id          String   @id @default(uuid())
+  userId      String
+  type        String
+  channel     String   @default("EMAIL")
+  status      String   @default("QUEUED")
+  subject     String
+  body        String
+  providerId  String?
+  attempts    Int      @default(0)
+  lastError   String?
+  deliveredAt DateTime?
+  createdAt   DateTime @default(now())
+  user        User @relation(fields: [userId], references: [id])
+  tournament  Tournament? @relation(fields: [tournamentId], references: [id])
+  tournamentId String?
+  @@index([userId, createdAt])
+  @@index([status, createdAt])
 }
 
 enum UserRole {
@@ -79,6 +175,16 @@ model User {
   passwordResetTokens PasswordResetToken[]
   emailVerificationTokens EmailVerificationToken[]
   createdTournaments Tournament[] @relation("CreatedTournaments")
+  scoutingEvaluations ScoutingEvaluation[] @relation("ScoutEvaluations")
+  evaluatedBy ScoutingEvaluation[] @relation("EvaluatedPlayer")
+  selectionDecisions SelectionDecision[] @relation("SelectionCandidate")
+  decidedSelections SelectionDecision[] @relation("SelectionDecisionMaker")
+  notifications Notification[]
+  matchResultsSubmitted MatchResult[] @relation("SubmittedResults")
+  matchResultsApproved MatchResult[] @relation("ApprovedResults")
+  matchParticipants MatchParticipant[]
+  teamMemberships TeamMembership[]
+  managedTeams Team[] @relation("ManagedTeams")
 }
 
 model GameProfile {
@@ -129,6 +235,7 @@ model Game {
   tournaments Tournament[]
   teams       Team[]
   profiles    GameProfile[]
+  scoutingEvaluations ScoutingEvaluation[]
 }
 
 model Tournament {
@@ -167,6 +274,9 @@ model Tournament {
   rankings                Ranking[]
   createdAt               DateTime          @default(now())
   updatedAt               DateTime          @updatedAt
+  scoutingEvaluations     ScoutingEvaluation[]
+  selectionDecisions      SelectionDecision[]
+  notifications           Notification[]
   @@index([status, registrationDeadline])
 }
 
@@ -274,8 +384,10 @@ model Match {
   tournamentId String
   round        Int
   scheduledAt  DateTime?
-  status       String
+  status       String     @default("SCHEDULED")
   result       Json?
+  participants MatchParticipant[]
+  results      MatchResult[]
   tournament   Tournament @relation(fields: [tournamentId], references: [id])
   @@index([tournamentId, round])
 }
@@ -300,6 +412,9 @@ model Team {
   members   TeamMember[]
   registrations Registration[]
   createdAt DateTime     @default(now())
+  managerId String?
+  manager   User?        @relation("ManagedTeams", fields: [managerId], references: [id])
+  memberships TeamMembership[]
 }
 
 model TeamMember {

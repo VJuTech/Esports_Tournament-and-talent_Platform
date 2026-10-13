@@ -44,6 +44,14 @@ async function confirmPaidRegistration({ tournamentId, userId, providerReference
       paymentReference: providerReference,
       status: 'PAID'
     }, tx);
+    await tx.notification.create({
+      data: {
+        userId,
+        type: 'REGISTRATION_CONFIRMED',
+        subject: `Registration confirmed: ${tournament.name}`,
+        body: `Your registration is confirmed. Tournament number: ${registration.tournamentNumber}.`
+      }
+    });
     return registration;
   }, { isolationLevel: 'Serializable' });
 }
