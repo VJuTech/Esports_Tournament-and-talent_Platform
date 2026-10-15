@@ -137,3 +137,8 @@
 .official-live-section-disabled h2 { color:#c6cedb; }
 .official-live-section-disabled p { color:#8993a5; }
 @media (max-width:760px) { .official-live-section { align-items:flex-start; flex-direction:column; } .official-live-actions { justify-content:flex-start; } }
+html { scroll-behavior:smooth; }
+.scroll-cue { text-decoration:none; }
+.scroll-cue:hover,.scroll-cue:focus-visible { color:#fff; }
+#platform-overview { scroll-margin-top:1rem; }
+@media (prefers-reduced-motion:reduce) { html { scroll-behavior:auto; } }
