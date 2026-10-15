@@ -1,4 +1,5 @@
 const { prisma } = require('../config/database');
+const { progressVerifiedResult } = require('../services/knockout.service');
 
 async function show(req, res, next) {
   try {
@@ -31,6 +32,11 @@ async function approveResult(req, res, next) {
     const match = await prisma.match.findUnique({ where: { id: req.params.id }, include: { participants: true, results: { where: { status: 'SUBMITTED' }, orderBy: { submittedAt: 'desc' }, take: 1 } } });
     const result = match?.results[0];
     if (!match || !result) return res.status(400).send('No submitted result is awaiting approval');
+    if (match.bracketPosition) {
+      await progressVerifiedResult({ matchId: match.id, resultId: result.id, actorId: req.session.user.id });
+      await recalculateStandings(match.tournamentId);
+      return res.redirect(`/matches/${match.id}`);
+    }
     await prisma.$transaction(async (tx) => {
       await tx.matchResult.update({ where: { id: result.id }, data: { status: 'VERIFIED', approvedById: req.session.user.id, approvedAt: new Date() } });
       await tx.match.update({ where: { id: match.id }, data: { status: 'VERIFIED', result: result.scores } });

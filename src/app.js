@@ -11,8 +11,9 @@ const { notFound, errorHandler } = require('./middleware/error.middleware');
 
 const app = express();
 const databaseUrl = new URL(env.DATABASE_URL);
+databaseUrl.searchParams.delete('sslmode');
 const sessionPool = new Pool({
-  connectionString: env.DATABASE_URL,
+  connectionString: databaseUrl.toString(),
   ssl: ['localhost', '127.0.0.1', '::1'].includes(databaseUrl.hostname) ? false : { rejectUnauthorized: false },
   connectionTimeoutMillis: 10000,
   idleTimeoutMillis: 30000,
@@ -23,7 +24,14 @@ if (env.TRUST_PROXY === 'true') app.set('trust proxy', 1);
 app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, 'views'));
 
-app.use(helmet());
+app.use(helmet({
+  contentSecurityPolicy: {
+    directives: {
+      frameSrc: ["'self'", 'https:'],
+      mediaSrc: ["'self'", 'https:']
+    }
+  }
+}));
 app.use(express.json({
   limit: '1mb',
   verify: (req, res, buffer) => {

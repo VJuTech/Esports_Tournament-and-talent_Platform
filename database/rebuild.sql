@@ -8,7 +8,8 @@
 
 BEGIN;
 
-DROP TABLE IF EXISTS "PasswordResetToken", "EmailVerificationToken", "GameProfile",
+DROP TABLE IF EXISTS "PasswordResetToken", "EmailVerificationToken", "GameProfile", "ImageAsset",
+  "TournamentStream", "TournamentTimetable", "TournamentRulebook",
   "Notification", "SelectionDecision", "ScoutingEvaluation", "TeamMembership",
   "MatchResult", "MatchParticipant", "AuditLog", "TeamMember", "Team", "Ranking", "Match", "Receipt",
   "ReceiptAdjustment", "ReceiptDeliveryAttempt", "PaymentAttempt", "Registration",
@@ -104,11 +105,22 @@ CREATE TABLE "Game" (
 CREATE UNIQUE INDEX "Game_name_key" ON "Game"("name");
 CREATE UNIQUE INDEX "Game_slug_key" ON "Game"("slug");
 
+INSERT INTO "Game" ("id", "name", "slug", "description", "supportedMode", "formats", "isActive", "createdAt", "updatedAt") VALUES
+  ('10000000-0000-4000-8000-000000000001', 'Snooker', 'snooker', 'Cue-sport tournaments with structured frames, officiating, and knockout brackets.', 'Individual', '["Single elimination","Round robin"]'::jsonb, true, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+  ('10000000-0000-4000-8000-000000000002', 'Chess', 'chess', 'Over-the-board chess competitions with published pairings and standings.', 'Individual', '["Swiss","Round robin","Single elimination"]'::jsonb, true, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+  ('10000000-0000-4000-8000-000000000003', 'Tennis', 'tennis', 'Court tournaments for singles and doubles competition.', 'Singles and doubles', '["Single elimination","Round robin"]'::jsonb, true, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+  ('10000000-0000-4000-8000-000000000004', 'Football', 'football', 'Grassroots and competitive football tournaments.', '5-a-side, 7-a-side, 11-a-side', '["Single elimination","Group stage"]'::jsonb, true, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+  ('10000000-0000-4000-8000-000000000005', 'Table Tennis', 'table-tennis', 'Table tennis fixtures with official result recording.', 'Singles and doubles', '["Single elimination","Round robin"]'::jsonb, true, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+  ('10000000-0000-4000-8000-000000000006', 'Badminton', 'badminton', 'Competitive badminton for singles and doubles.', 'Singles and doubles', '["Single elimination","Round robin"]'::jsonb, true, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+  ('10000000-0000-4000-8000-000000000007', 'Basketball', 'basketball', 'Team basketball competitions with fixtures and standings.', '3x3 and 5x5', '["Single elimination","Group stage"]'::jsonb, true, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+  ('10000000-0000-4000-8000-000000000008', 'Darts', 'darts', 'Darts fixtures with legs, sets, and knockout progression.', 'Individual', '["Single elimination","Round robin"]'::jsonb, true, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+
 CREATE TABLE "Tournament" (
   "id" TEXT NOT NULL,
   "code" TEXT NOT NULL,
   "name" TEXT NOT NULL,
   "description" TEXT,
+  "imageUrl" TEXT,
   "format" TEXT NOT NULL,
   "participationType" "ParticipationType" NOT NULL DEFAULT 'INDIVIDUAL',
   "entryFee" DECIMAL(12,2) NOT NULL,
@@ -262,10 +274,63 @@ CREATE TABLE "Match" (
   "scheduledAt" TIMESTAMP(3),
   "status" TEXT NOT NULL DEFAULT 'SCHEDULED',
   "result" JSONB,
+  "bracketPosition" INTEGER,
+  "nextMatchId" TEXT,
+  "nextMatchSlot" INTEGER,
+  "isEliminator" BOOLEAN NOT NULL DEFAULT true,
   CONSTRAINT "Match_pkey" PRIMARY KEY ("id")
 );
 
 CREATE INDEX "Match_tournamentId_round_idx" ON "Match"("tournamentId", "round");
+CREATE INDEX "Match_nextMatchId_idx" ON "Match"("nextMatchId");
+
+CREATE TABLE "TournamentRulebook" (
+  "id" TEXT NOT NULL,
+  "tournamentId" TEXT NOT NULL,
+  "title" TEXT NOT NULL,
+  "content" TEXT NOT NULL,
+  "publishedAt" TIMESTAMP(3),
+  "updatedAt" TIMESTAMP(3) NOT NULL,
+  CONSTRAINT "TournamentRulebook_pkey" PRIMARY KEY ("id")
+);
+CREATE UNIQUE INDEX "TournamentRulebook_tournamentId_key" ON "TournamentRulebook"("tournamentId");
+
+CREATE TABLE "TournamentTimetable" (
+  "id" TEXT NOT NULL,
+  "tournamentId" TEXT NOT NULL,
+  "publishedAt" TIMESTAMP(3),
+  "notes" TEXT,
+  CONSTRAINT "TournamentTimetable_pkey" PRIMARY KEY ("id")
+);
+CREATE UNIQUE INDEX "TournamentTimetable_tournamentId_key" ON "TournamentTimetable"("tournamentId");
+
+CREATE TABLE "TournamentStream" (
+  "id" TEXT NOT NULL,
+  "tournamentId" TEXT NOT NULL,
+  "title" TEXT NOT NULL,
+  "sourceUrl" TEXT NOT NULL,
+  "ingestUrl" TEXT,
+  "provider" TEXT NOT NULL,
+  "status" TEXT NOT NULL DEFAULT 'OFFLINE',
+  "isEnabled" BOOLEAN NOT NULL DEFAULT false,
+  "startedAt" TIMESTAMP(3),
+  "endedAt" TIMESTAMP(3),
+  "updatedAt" TIMESTAMP(3) NOT NULL,
+  CONSTRAINT "TournamentStream_pkey" PRIMARY KEY ("id")
+);
+CREATE UNIQUE INDEX "TournamentStream_tournamentId_key" ON "TournamentStream"("tournamentId");
+
+CREATE TABLE "ImageAsset" (
+  "id" TEXT NOT NULL,
+  "fileName" TEXT NOT NULL,
+  "contentType" TEXT NOT NULL,
+  "bytes" BYTEA NOT NULL,
+  "size" INTEGER NOT NULL,
+  "uploadedById" TEXT,
+  "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  CONSTRAINT "ImageAsset_pkey" PRIMARY KEY ("id")
+);
+CREATE INDEX "ImageAsset_uploadedById_createdAt_idx" ON "ImageAsset"("uploadedById", "createdAt");
 
 CREATE TABLE "MatchParticipant" (
   "id" TEXT NOT NULL,
@@ -504,7 +569,30 @@ ALTER TABLE "ReceiptAdjustment"
 ALTER TABLE "Match"
   ADD CONSTRAINT "Match_tournamentId_fkey"
   FOREIGN KEY ("tournamentId") REFERENCES "Tournament"("id")
-  ON DELETE RESTRICT ON UPDATE CASCADE;
+  ON DELETE RESTRICT ON UPDATE CASCADE,
+  ADD CONSTRAINT "Match_nextMatchId_fkey"
+  FOREIGN KEY ("nextMatchId") REFERENCES "Match"("id")
+  ON DELETE SET NULL ON UPDATE CASCADE;
+
+ALTER TABLE "TournamentRulebook"
+  ADD CONSTRAINT "TournamentRulebook_tournamentId_fkey"
+  FOREIGN KEY ("tournamentId") REFERENCES "Tournament"("id")
+  ON DELETE CASCADE ON UPDATE CASCADE;
+
+ALTER TABLE "TournamentTimetable"
+  ADD CONSTRAINT "TournamentTimetable_tournamentId_fkey"
+  FOREIGN KEY ("tournamentId") REFERENCES "Tournament"("id")
+  ON DELETE CASCADE ON UPDATE CASCADE;
+
+ALTER TABLE "TournamentStream"
+  ADD CONSTRAINT "TournamentStream_tournamentId_fkey"
+  FOREIGN KEY ("tournamentId") REFERENCES "Tournament"("id")
+  ON DELETE CASCADE ON UPDATE CASCADE;
+
+ALTER TABLE "ImageAsset"
+  ADD CONSTRAINT "ImageAsset_uploadedById_fkey"
+  FOREIGN KEY ("uploadedById") REFERENCES "User"("id")
+  ON DELETE SET NULL ON UPDATE CASCADE;
 
 ALTER TABLE "MatchParticipant"
   ADD CONSTRAINT "MatchParticipant_matchId_fkey"

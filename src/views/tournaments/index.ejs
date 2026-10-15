@@ -3,7 +3,7 @@
 <% if (!tournaments.length) { %><div class="empty-state">No tournaments are currently published. Check back soon.</div><% } %>
 <div class="tournament-grid">
   <% tournaments.forEach((tournament) => { %>
-    <a class="tournament-card" href="/tournaments/<%= tournament.id %>"><div class="tournament-card-top"><span class="status-pill"><%= tournament.status %></span><span><%= tournament.game.name %></span></div><h2><%= tournament.name %></h2><p><%= tournament.description || 'A structured competition for ambitious players.' %></p><div class="tournament-card-meta"><span><strong><%= tournament.format %></strong> format</span><span><strong><%= tournament.entryFee %> <%= tournament.currency %></strong> entry</span></div></a>
+    <a class="tournament-card" href="/tournaments/<%= tournament.id %>"><% if (tournament.imageUrl) { %><img class="tournament-card-image" src="<%= tournament.imageUrl %>" alt="<%= tournament.name %> tournament artwork"><% } %><div class="tournament-card-top"><span class="status-pill"><%= tournament.status %></span><span><%= tournament.game.name %></span></div><h2><%= tournament.name %></h2><p><%= tournament.description || 'A structured competition for ambitious players.' %></p><div class="tournament-card-meta"><span><strong><%= tournament.format %></strong> format</span><span><strong><%= tournament.entryFee %> <%= tournament.currency %></strong> registration fee</span></div></a>
   <% }) %>
 </div>
 <%- include('../partials/dashboard-footer') %>

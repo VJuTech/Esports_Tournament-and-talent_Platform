@@ -1,4 +1,4 @@
 <%- include('../partials/dashboard-header', { title, active: 'manage' }) %>
-<section class="page-intro page-intro-small"><span class="eyebrow">Operations</span><h1><%= heading %>.</h1></section>
+<section class="page-intro page-intro-small"><span class="eyebrow">Operations</span><h1><%= heading %>.</h1><% if (title === 'User accounts') { %><a class="button" href="/admin/users/officials/new">Create tournament official</a><% } %></section>
 <section class="admin-table"><div class="admin-table-head"><% columns.forEach((column) => { %><span><%= column.replaceAll('_', ' ') %></span><% }) %></div><% records.forEach((record) => { %><div class="admin-table-row"><% columns.forEach((column) => { %><span><%= record[column] instanceof Date ? record[column].toLocaleString() : record[column] || '—' %></span><% }) %></div><% }) %></section>
 <%- include('../partials/dashboard-footer') %>

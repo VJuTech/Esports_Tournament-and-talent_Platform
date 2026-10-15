@@ -1,13 +1,14 @@
 const { prisma } = require('../config/database');
 const { listGames, findGameById, createGame, updateGame } = require('../models/game.model');
+const { storeImage } = require('../services/image.service');
 
-function gameData(body) {
+function gameData(body, imageUrl) {
   return {
     name: body.name.trim(),
     slug: body.slug.trim().toLowerCase(),
     description: body.description?.trim() || null,
     supportedMode: body.supportedMode?.trim() || null,
-    imageUrl: body.imageUrl?.trim() || null,
+    imageUrl: imageUrl || null,
     rulesUrl: body.rulesUrl?.trim() || null,
     formats: body.formats?.split(',').map((format) => format.trim()).filter(Boolean) || []
   };
@@ -41,7 +42,7 @@ async function edit(req, res, next) {
 
 async function create(req, res, next) {
   try {
-    await createGame(gameData(req.body));
+    await createGame(gameData(req.body, await storeImage(req.file, req.session.user.id)));
     return res.redirect('/admin/games');
   } catch (error) {
     if (error.code === 'P2002') return res.status(409).render('admin/games/form', { title: 'Add a game', game: req.body, error: 'Game name and slug must be unique.' });
@@ -51,7 +52,9 @@ async function create(req, res, next) {
 
 async function update(req, res, next) {
   try {
-    await updateGame(req.params.id, gameData(req.body));
+    const current = await findGameById(req.params.id);
+    if (!current) return res.status(404).render('404', { title: 'Game not found' });
+    await updateGame(req.params.id, gameData(req.body, (await storeImage(req.file, req.session.user.id)) || current.imageUrl));
     await prisma.auditLog.create({
       data: { actorId: req.session.user.id, action: 'GAME_UPDATED', entity: 'Game', entityId: req.params.id, metadata: { fields: Object.keys(gameData(req.body)) } }
     });

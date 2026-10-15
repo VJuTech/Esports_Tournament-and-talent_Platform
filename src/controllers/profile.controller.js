@@ -1,5 +1,6 @@
 const { findUserById, updateProfile } = require('../models/user.model');
 const { listActiveGames, upsertGameProfile } = require('../models/game-profile.model');
+const { storeImage } = require('../services/image.service');
 
 async function show(req, res, next) {
   try {
@@ -17,11 +18,12 @@ async function show(req, res, next) {
 
 async function update(req, res, next) {
   try {
-    const { displayName, country, profileImage, eligibilityInfo } = req.body;
+    const { displayName, country, eligibilityInfo } = req.body;
+    const profileImage = await storeImage(req.file, req.session.user.id);
     await updateProfile(req.session.user.id, {
       displayName: displayName.trim(),
       country: country.trim(),
-      profileImage: profileImage.trim() || null,
+      profileImage: profileImage || req.currentUserRecord.profileImage,
       eligibilityInfo: eligibilityInfo.trim() ? { notes: eligibilityInfo.trim() } : null
     });
     const gameIds = Array.isArray(req.body.gameId) ? req.body.gameId : [req.body.gameId].filter(Boolean);

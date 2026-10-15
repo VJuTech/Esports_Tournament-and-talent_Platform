@@ -2,7 +2,7 @@
 <a class="back-link" href="/admin/tournaments">← Tournament management</a>
 <section class="competition-heading">
   <div><span class="eyebrow"><%= tournament.game.name %> · <%= tournament.status %></span><h1><%= tournament.name %></h1><p class="muted">Competition management workspace · <%= tournament.format %></p></div>
-  <div class="competition-actions"><a class="button button-secondary" href="/admin/tournaments/<%= tournament.id %>/edit">Edit settings</a><a class="button" href="/tournaments/<%= tournament.id %>">View public page</a></div>
+  <div class="competition-actions"><a class="button button-secondary" href="/admin/tournaments/<%= tournament.id %>/edit">Edit settings</a><a class="button button-secondary" href="/admin/tournaments/<%= tournament.id %>/operator">Tournament operator</a><a class="button" href="/tournaments/<%= tournament.id %>/bracket">View public draw</a></div>
 </section>
 <section class="competition-toolbar"><div><strong><%= matches.length %></strong><span>matches scheduled</span></div><div><strong><%= tournament._count.registrations %>/<%= tournament.capacity %></strong><span>registered players</span></div><div><strong><%= tournament.status.replaceAll('_', ' ') %></strong><span>competition status</span></div></section>
 <% if (!matches.length) { %>

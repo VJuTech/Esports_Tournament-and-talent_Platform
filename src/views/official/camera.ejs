@@ -1,0 +1,7 @@
+<%- include('../partials/dashboard-header', { title, active: 'official' }) %>
+<a class="back-link" href="/official">← Official control room</a>
+<section class="camera-hero"><div><span class="dashboard-kicker">Authorized venue camera</span><h1><%= stream.tournament.name %></h1><p><%= stream.tournament.game.name %> · This camera control is available only while the administrator has enabled official live coverage.</p></div><b class="live-badge"><i></i> Live enabled</b></section>
+<section class="camera-studio"><video id="camera-preview" autoplay muted playsinline></video><div class="camera-studio-controls"><button class="button" id="start-camera" type="button">Open camera</button><button class="button button-secondary" id="start-broadcast" type="button" disabled>Start venue broadcast</button><button class="button button-secondary" id="stop-camera" type="button" disabled>Stop camera</button><p id="camera-status" role="status">Open a connected camera to preview the tournament arena.</p></div></section>
+<script>window.liveCameraConfig = { ingestUrl: <%- JSON.stringify(stream.ingestUrl) %> };</script>
+<script src="/js/live-camera.js"></script>
+<%- include('../partials/dashboard-footer') %>

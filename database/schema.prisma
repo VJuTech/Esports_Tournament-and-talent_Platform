@@ -185,6 +185,7 @@ model User {
   matchParticipants MatchParticipant[]
   teamMemberships TeamMembership[]
   managedTeams Team[] @relation("ManagedTeams")
+  uploadedImages ImageAsset[] @relation("UploadedImages")
 }
 
 model GameProfile {
@@ -243,6 +244,7 @@ model Tournament {
   code                    String            @unique
   name                    String
   description             String?
+  imageUrl                String?
   format                  String
   participationType       ParticipationType @default(INDIVIDUAL)
   entryFee                Decimal           @db.Decimal(12, 2)
@@ -272,6 +274,9 @@ model Tournament {
   registrations           Registration[]
   matches                 Match[]
   rankings                Ranking[]
+  rulebook                TournamentRulebook?
+  timetable               TournamentTimetable?
+  stream                  TournamentStream?
   createdAt               DateTime          @default(now())
   updatedAt               DateTime          @updatedAt
   scoutingEvaluations     ScoutingEvaluation[]
@@ -386,10 +391,62 @@ model Match {
   scheduledAt  DateTime?
   status       String     @default("SCHEDULED")
   result       Json?
+  bracketPosition Int?
+  nextMatchId  String?
+  nextMatchSlot Int?
+  isEliminator Boolean @default(true)
+  nextMatch    Match? @relation("MatchProgression", fields: [nextMatchId], references: [id])
+  sourceMatches Match[] @relation("MatchProgression")
   participants MatchParticipant[]
   results      MatchResult[]
   tournament   Tournament @relation(fields: [tournamentId], references: [id])
   @@index([tournamentId, round])
+  @@index([nextMatchId])
+}
+
+model TournamentRulebook {
+  id           String @id @default(uuid())
+  tournamentId String @unique
+  title        String
+  content      String
+  publishedAt  DateTime?
+  updatedAt    DateTime @updatedAt
+  tournament   Tournament @relation(fields: [tournamentId], references: [id], onDelete: Cascade)
+}
+
+model TournamentTimetable {
+  id           String @id @default(uuid())
+  tournamentId String @unique
+  publishedAt  DateTime?
+  notes        String?
+  tournament   Tournament @relation(fields: [tournamentId], references: [id], onDelete: Cascade)
+}
+
+model TournamentStream {
+  id           String @id @default(uuid())
+  tournamentId String @unique
+  title        String
+  sourceUrl    String
+  ingestUrl    String?
+  provider     String
+  status       String @default("OFFLINE")
+  isEnabled    Boolean @default(false)
+  startedAt    DateTime?
+  endedAt      DateTime?
+  updatedAt    DateTime @updatedAt
+  tournament   Tournament @relation(fields: [tournamentId], references: [id], onDelete: Cascade)
+}
+
+model ImageAsset {
+  id           String   @id @default(uuid())
+  fileName     String
+  contentType  String
+  bytes        Bytes
+  size         Int
+  uploadedById String?
+  createdAt    DateTime @default(now())
+  uploadedBy   User?    @relation("UploadedImages", fields: [uploadedById], references: [id], onDelete: SetNull)
+  @@index([uploadedById, createdAt])
 }
 
 model Ranking {

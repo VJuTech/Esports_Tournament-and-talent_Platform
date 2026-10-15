@@ -1,6 +1,7 @@
 const { prisma } = require('../config/database');
 const { listGames } = require('../models/game.model');
 const { listManagedTournaments, findTournamentById, createTournament, updateTournament } = require('../models/tournament.model');
+const { storeImage } = require('../services/image.service');
 
 const transitions = {
   DRAFT: ['PUBLISHED', 'CANCELLED'],
@@ -9,6 +10,7 @@ const transitions = {
   COMPLETED: [],
   CANCELLED: []
 };
+const supportedCurrencies = new Set(['NGN', 'USD', 'GBP', 'EUR', 'ZAR', 'GHS', 'KES']);
 
 function parseDate(value) {
   const date = new Date(value);
@@ -16,7 +18,7 @@ function parseDate(value) {
   return date;
 }
 
-function tournamentData(body, userId) {
+function tournamentData(body, userId, imageUrl) {
   const registrationOpensAt = parseDate(body.registrationOpensAt);
   const registrationDeadline = parseDate(body.registrationDeadline);
   const startsAt = parseDate(body.startsAt);
@@ -25,7 +27,9 @@ function tournamentData(body, userId) {
   const capacity = Number(body.capacity);
   const minimumAge = body.eligibilityMinimumAge ? Number(body.eligibilityMinimumAge) : null;
   const matchDuration = body.matchDurationMinutes ? Number(body.matchDurationMinutes) : null;
-  if (!Number.isFinite(entryFee) || entryFee < 0) throw new Error('Entry fee must be zero or greater');
+  const currency = body.currency?.trim().toUpperCase();
+  if (!Number.isFinite(entryFee) || entryFee < 0) throw new Error('Registration fee must be zero or greater');
+  if (!supportedCurrencies.has(currency)) throw new Error('Select a supported currency');
   if (!Number.isInteger(capacity) || capacity < 1) throw new Error('Capacity must be a positive whole number');
   if (minimumAge !== null && (!Number.isInteger(minimumAge) || minimumAge < 0)) throw new Error('Minimum age is invalid');
   if (matchDuration !== null && (!Number.isInteger(matchDuration) || matchDuration < 1)) throw new Error('Match duration is invalid');
@@ -34,10 +38,11 @@ function tournamentData(body, userId) {
     code: body.code.trim().toUpperCase(),
     name: body.name.trim(),
     description: body.description?.trim() || null,
+    imageUrl: imageUrl || null,
     format: body.format,
     participationType: body.participationType,
     entryFee,
-    currency: body.currency.trim().toUpperCase(),
+    currency,
     registrationOpensAt,
     registrationDeadline,
     startsAt,
@@ -90,7 +95,9 @@ async function edit(req, res, next) {
 
 async function create(req, res, next) {
   try {
-    const data = tournamentData(req.body, req.session.user.id);
+    const imageUrl = await storeImage(req.file, req.session.user.id);
+    if (!imageUrl) throw new Error('A tournament image is required');
+    const data = tournamentData(req.body, req.session.user.id, imageUrl);
     await createTournament(data);
     return res.redirect('/admin/tournaments');
   } catch (error) {
@@ -102,7 +109,7 @@ async function update(req, res, next) {
   try {
     const current = await findTournamentById(req.params.id);
     if (!current) return res.status(404).render('404', { title: 'Tournament not found' });
-    const data = tournamentData(req.body, current.createdById);
+    const data = tournamentData(req.body, current.createdById, (await storeImage(req.file, req.session.user.id)) || current.imageUrl);
     delete data.createdById;
     const changedPublishedRules = current.status === 'PUBLISHED' && (
       current.registrationDeadline.getTime() !== data.registrationDeadline.getTime() ||
