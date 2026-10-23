@@ -129,10 +129,20 @@ async function resetPassword(req, res, next) {
 }
 
 function logout(req, res, next) {
+  const clearSessionCookie = () => {
+    res.clearCookie('championlounge.sid', {
+      path: '/',
+      httpOnly: true,
+      sameSite: 'lax',
+      secure: env.NODE_ENV === 'production'
+    });
+    return res.redirect('/');
+  };
+
+  if (!req.session) return clearSessionCookie();
   req.session.destroy((error) => {
     if (error) return next(error);
-    res.clearCookie('championlounge.sid');
-    return res.redirect('/');
+    return clearSessionCookie();
   });
 }
 
