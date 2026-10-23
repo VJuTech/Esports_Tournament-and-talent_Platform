@@ -23,27 +23,31 @@ async function checkout(req, res, next) {
         providerReference: reference,
         amount: registration.feeAmount,
         currency: registration.feeCurrency,
-        provider: 'configured-provider',
-        status: 'PENDING'
+        provider: 'BANK_TRANSFER',
+        status: 'PENDING',
+        providerPayload: { method: 'BANK_TRANSFER' }
       }
     });
-    try {
-      const providerPayment = await initiatePayment({
-        reference,
-        amount: String(registration.feeAmount),
-        currency: registration.feeCurrency,
-        email: registration.user.email,
-        callbackUrl: `${env.APP_URL}/payments/return?reference=${encodeURIComponent(reference)}`
-      });
+
+    const tournament = registration.tournament;
+    if (!tournament.paymentBankName || !tournament.paymentAccountName || !tournament.paymentAccountNumber || !tournament.paymentAccountType) {
       await prisma.paymentAttempt.update({
         where: { id: attempt.id },
-        data: { status: 'PROCESSING', checkoutUrl: providerPayment.checkoutUrl, providerPayload: providerPayment }
+        data: { status: 'FAILED', failureReason: 'Bank transfer details are not configured for this tournament' }
       });
-      return res.redirect(providerPayment.checkoutUrl);
-    } catch (error) {
-      await prisma.paymentAttempt.update({ where: { id: attempt.id }, data: { status: 'FAILED', failureReason: error.message } });
-      return res.status(502).redirect(`/registrations/${registration.id}?error=Payment%20provider%20could%20not%20start%20checkout`);
+      return res.status(400).redirect(`/registrations/${registration.id}?error=Payment%20details%20for%20this%20tournament%20are%20not%20available`);
     }
+
+    return res.render('payments/manual-checkout', {
+      title: 'Bank transfer payment instructions',
+      registration,
+      attempt,
+      tournament,
+      reference,
+      paymentAmount: registration.feeAmount,
+      paymentCurrency: registration.feeCurrency,
+      paymentReference: `${tournament.code}-${registration.id.slice(0, 8).toUpperCase()}`
+    });
   } catch (error) {
     return next(error);
   }

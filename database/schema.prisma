@@ -263,6 +263,11 @@ model Tournament {
   prizeInformation        String?
   refundPolicy            String?
   terms                   String?
+  paymentBankName         String?
+  paymentAccountName      String?
+  paymentAccountNumber    String?
+  paymentAccountType      String?
+  paymentInstructions     String?
   disputeDeadline         DateTime?
   status                  TournamentStatus @default(DRAFT)
   gameId                  String

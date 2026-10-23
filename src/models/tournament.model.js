@@ -2,7 +2,7 @@ const { prisma } = require('../config/database');
 
 function listPublishedTournaments() {
   return prisma.tournament.findMany({
-    where: { status: 'PUBLISHED' },
+    where: { status: { in: ['PUBLISHED', 'IN_PROGRESS', 'COMPLETED', 'CANCELLED'] } },
     include: { game: true },
     orderBy: { registrationDeadline: 'asc' }
   });

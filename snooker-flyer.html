@@ -1,0 +1,417 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Snooker Tournament Flyer</title>
+    <style>
+      @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&family=Space+Grotesk:wght@500;700&display=swap');
+
+      :root {
+        --ink: #171226;
+        --muted: #756f88;
+        --purple: #6c35d9;
+        --purple-dark: #3e1e87;
+        --gold: #f7c948;
+        --paper: #faf9fd;
+        --line: #e8e3f0;
+        --white: #ffffff;
+      }
+
+      * { box-sizing: border-box; }
+      body {
+        margin: 0;
+        font-family: 'DM Sans', sans-serif;
+        background-image:
+          linear-gradient(135deg, rgba(30,18,56,0.88), rgba(18,11,32,0.78)),
+          url('https://images.unsplash.com/photo-1517649763962-0c623066013b?auto=format&fit=crop&w=1600&q=80');
+        background-size: cover;
+        background-position: center;
+        background-attachment: fixed;
+        color: var(--white);
+      }
+
+      .flyer {
+        width: min(900px, 92vw);
+        margin: 40px auto;
+        background:
+          linear-gradient(180deg, rgba(32,17,58,0.75), rgba(17,11,31,0.88)),
+          url('https://images.unsplash.com/photo-1517649763962-0c623066013b?auto=format&fit=crop&w=1200&q=80') center/cover no-repeat;
+        border: 1px solid rgba(255,255,255,0.08);
+        border-radius: 24px;
+        overflow: hidden;
+        box-shadow: 0 30px 60px rgba(15, 8, 25, 0.6);
+        position: relative;
+      }
+
+      .flyer::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background: linear-gradient(120deg, rgba(16, 11, 27, 0.18), rgba(108, 53, 217, 0.24));
+        pointer-events: none;
+      }
+
+      .flyer::after {
+        content: "";
+        position: absolute;
+        right: 46px;
+        top: 120px;
+        width: 240px;
+        height: 12px;
+        background: linear-gradient(90deg, rgba(255,255,255,0.16), rgba(153, 109, 42, 0.96), rgba(255,255,255,0.16));
+        border-radius: 99px;
+        transform: rotate(-26deg);
+        box-shadow: 0 0 18px rgba(247, 201, 73, 0.3);
+        opacity: 0.9;
+      }
+
+      .flyer .cue-ball {
+        position: absolute;
+        right: 170px;
+        top: 150px;
+        width: 52px;
+        height: 52px;
+        border-radius: 50%;
+        background: radial-gradient(circle at 30% 30%, #ffffff, #dfeaf8 48%, #b3c6d9 100%);
+        box-shadow: 0 0 24px rgba(255,255,255,0.36);
+        border: 2px solid rgba(95, 110, 131, 0.5);
+        z-index: 1;
+      }
+
+      .flyer .cue-ball::after {
+        content: "";
+        position: absolute;
+        inset: 12px;
+        border-radius: 50%;
+        border: 1px solid rgba(108, 53, 217, 0.28);
+      }
+
+      .flyer > * {
+        position: relative;
+        z-index: 1;
+      }
+
+      .topbar {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 22px 30px 18px;
+        background: rgba(255,255,255,0.02);
+        border-bottom: 1px solid rgba(255,255,255,0.08);
+      }
+
+      .brand {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        font-family: 'Space Grotesk', sans-serif;
+      }
+
+      .brand-mark {
+        width: 40px;
+        height: 40px;
+        border-radius: 12px;
+        display: grid;
+        place-items: center;
+        background: var(--gold);
+        color: var(--purple-dark);
+        font-weight: 700;
+      }
+
+      .brand strong {
+        display: block;
+        font-size: 1.25rem;
+        letter-spacing: -0.05em;
+      }
+
+      .brand small {
+        display: block;
+        letter-spacing: 0.16em;
+        text-transform: uppercase;
+        font-size: 0.62rem;
+        color: #cfc3da;
+      }
+
+      .tag {
+        padding: 10px 18px;
+        border-radius: 999px;
+        background: rgba(247, 201, 73, 0.12);
+        border: 1px solid rgba(247, 201, 73, 0.5);
+        color: var(--gold);
+        font-size: 0.78rem;
+        font-weight: 700;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+      }
+
+      .hero {
+        display: grid;
+        grid-template-columns: 1.3fr 0.7fr;
+        gap: 24px;
+        padding: 40px 30px 20px;
+        align-items: center;
+      }
+
+      .eyebrow {
+        font-size: 0.76rem;
+        letter-spacing: 0.18em;
+        text-transform: uppercase;
+        color: var(--gold);
+        font-weight: 700;
+      }
+
+      h1 {
+        margin: 12px 0 16px;
+        font-family: 'Space Grotesk', sans-serif;
+        font-size: clamp(2.8rem, 6vw, 5rem);
+        line-height: 0.96;
+        letter-spacing: -0.065em;
+      }
+
+      .hero-copy p {
+        margin: 0;
+        max-width: 560px;
+        font-size: 1.1rem;
+        line-height: 1.7;
+        color: #d7cde9;
+      }
+
+      .ticket {
+        background: linear-gradient(160deg, rgba(247, 201, 73, 0.15), rgba(108, 53, 217, 0.14));
+        border: 1px solid rgba(247, 201, 73, 0.4);
+        border-radius: 20px;
+        padding: 22px;
+      }
+
+      .ticket .price-label {
+        font-size: 0.72rem;
+        color: #d9c8f5;
+        text-transform: uppercase;
+        letter-spacing: 0.14em;
+      }
+
+      .ticket .amount {
+        display: block;
+        margin-top: 10px;
+        font-family: 'Space Grotesk', sans-serif;
+        font-size: clamp(2.2rem, 4vw, 3.5rem);
+        line-height: 1;
+        color: var(--gold);
+      }
+
+      .ticket small {
+        display: block;
+        margin-top: 10px;
+        color: #dccff0;
+      }
+
+      .prize-grid {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 18px;
+        padding: 8px 30px 20px;
+      }
+
+      .prize-card {
+        background: rgba(255,255,255,0.03);
+        border: 1px solid rgba(255,255,255,0.07);
+        border-radius: 18px;
+        padding: 18px 16px;
+        text-align: center;
+      }
+
+      .prize-card .rank {
+        display: inline-block;
+        font-size: 0.72rem;
+        font-weight: 700;
+        letter-spacing: 0.14em;
+        color: var(--gold);
+        text-transform: uppercase;
+      }
+
+      .prize-card .cash {
+        display: block;
+        margin-top: 12px;
+        font-family: 'Space Grotesk', sans-serif;
+        font-size: clamp(1.8rem, 3vw, 2.6rem);
+        color: var(--white);
+      }
+
+      .prize-card .naira {
+        display: block;
+        margin-top: 6px;
+        color: #d3c3ea;
+      }
+
+      .info-grid {
+        display: grid;
+        grid-template-columns: 1.1fr 0.9fr;
+        gap: 20px;
+        padding: 10px 30px 30px;
+      }
+
+      .info-box, .cta-box {
+        border-radius: 18px;
+        padding: 22px 20px;
+        background: rgba(255,255,255,0.03);
+        border: 1px solid rgba(255,255,255,0.08);
+      }
+
+      .info-box h3, .cta-box h3 {
+        margin: 0 0 14px;
+        font-size: 0.9rem;
+        color: var(--gold);
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+      }
+
+      .venue {
+        margin: 0;
+        font-size: 1.05rem;
+        line-height: 1.7;
+        color: #e6dff8;
+      }
+
+      .cta-box {
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+      }
+
+      .cta-box p {
+        margin: 0 0 18px;
+        color: #d9cdea;
+        line-height: 1.6;
+      }
+
+      .button {
+        display: inline-block;
+        text-align: center;
+        padding: 14px 18px;
+        background: var(--gold);
+        color: var(--purple-dark);
+        font-weight: 700;
+        border-radius: 12px;
+        text-decoration: none;
+        border: none;
+        cursor: pointer;
+      }
+
+      .toolbar {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 12px;
+        padding: 0 30px 24px;
+      }
+
+      .meta {
+        padding: 0 30px 30px;
+      }
+
+      .meta-box {
+        border-top: 1px solid rgba(255,255,255,0.08);
+        padding-top: 18px;
+        display: flex;
+        justify-content: space-between;
+        gap: 18px;
+        flex-wrap: wrap;
+        color: #d8c9eb;
+      }
+
+      .meta-box strong {
+        color: var(--white);
+      }
+
+      @media (max-width: 760px) {
+        .hero, .info-grid, .prize-grid {
+          grid-template-columns: 1fr;
+        }
+
+        .topbar {
+          flex-direction: column;
+          align-items: flex-start;
+          gap: 12px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="flyer">
+      <div class="cue-ball"></div>
+
+      <div class="topbar">
+        <div class="brand">
+          <div class="brand-mark">CL</div>
+          <div>
+            <strong>Champion Lounge</strong>
+            <small>Esports Arena</small>
+          </div>
+        </div>
+        <div class="tag">Snooker Challenge</div>
+      </div>
+
+      <div class="hero">
+        <div class="hero-copy">
+          <div class="eyebrow">Delta State Championship</div>
+          <h1>Snooker<br>Showdown</h1>
+          <p>
+            Play for glory, prestige, and a chance to claim the biggest prize in this premium snooker tournament.
+          </p>
+        </div>
+
+        <div class="ticket">
+          <div class="price-label">Registration Fee</div>
+          <span class="amount">₦30,000</span>
+          <small>Only</small>
+        </div>
+      </div>
+
+      <div class="prize-grid">
+        <div class="prize-card">
+          <span class="rank">1st Place</span>
+          <span class="cash">₦1,000,000</span>
+          <span class="naira">Naira</span>
+        </div>
+
+        <div class="prize-card">
+          <span class="rank">2nd Place</span>
+          <span class="cash">₦500,000</span>
+          <span class="naira">Naira</span>
+        </div>
+
+        <div class="prize-card">
+          <span class="rank">3rd Place</span>
+          <span class="cash">₦300,000</span>
+          <span class="naira">Naira</span>
+        </div>
+      </div>
+
+      <div class="info-grid">
+        <div class="info-box">
+          <h3>Venue</h3>
+          <p class="venue">DKels Hotel and Suite,<br>Ogwahi-uku, Delta State.</p>
+        </div>
+
+        <div class="cta-box">
+          <h3>Register</h3>
+          <p>Registration starts now and runs through the second week of January.</p>
+          <a class="button" href="https://esportstournamentndtalentplatform.onrender.com/" target="_blank">Register Now</a>
+        </div>
+      </div>
+
+      <div class="toolbar">
+        <a class="button" href="snooker-flyer.html" download>Download flyer</a>
+        <button class="button" type="button" onclick="window.print()">Print / Save as PDF</button>
+      </div>
+
+      <div class="meta">
+        <div class="meta-box">
+          <div><strong>Duration:</strong> 3 days</div>
+          <div><strong>Start:</strong> Now</div>
+          <div><strong>Deadline:</strong> Second week of January</div>
+        </div>
+      </div>
+    </div>
+  </body>
+</html>

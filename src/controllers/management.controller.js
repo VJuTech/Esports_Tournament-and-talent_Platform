@@ -64,7 +64,11 @@ function tournamentData(body, userId, imageUrl) {
 }
 
 function renderForm(res, data) {
-  return res.render('admin/tournaments/form', { title: data.tournament ? 'Edit tournament' : 'Create tournament', ...data });
+  return res.render('admin/tournaments/form', {
+    title: data.tournament ? 'Edit tournament' : 'Create tournament',
+    ...data,
+    notice: data.notice || null
+  });
 }
 
 async function index(req, res, next) {
@@ -87,7 +91,10 @@ async function edit(req, res, next) {
   try {
     const tournament = await findTournamentById(req.params.id);
     if (!tournament) return res.status(404).render('404', { title: 'Tournament not found' });
-    return renderForm(res, { tournament, games: await listGames(), error: null });
+    const notice = req.query.saved === 'draft'
+      ? 'Draft saved. Review the details below, then publish it when ready.'
+      : req.query.saved === 'changes' ? 'Tournament changes saved.' : null;
+    return renderForm(res, { tournament, games: await listGames(), error: null, notice });
   } catch (error) {
     return next(error);
   }
@@ -98,8 +105,8 @@ async function create(req, res, next) {
     const imageUrl = await storeImage(req.file, req.session.user.id);
     if (!imageUrl) throw new Error('A tournament image is required');
     const data = tournamentData(req.body, req.session.user.id, imageUrl);
-    await createTournament(data);
-    return res.redirect('/admin/tournaments');
+    const tournament = await createTournament(data);
+    return res.redirect(`/admin/tournaments/${tournament.id}/edit?saved=draft`);
   } catch (error) {
     return renderForm(res.status(400), { tournament: req.body, games: await listGames(), error: error.message });
   }
@@ -121,7 +128,7 @@ async function update(req, res, next) {
     await prisma.auditLog.create({
       data: { actorId: req.session.user.id, action: changedPublishedRules ? 'PUBLISHED_TOURNAMENT_RULES_CHANGED' : 'TOURNAMENT_UPDATED', entity: 'Tournament', entityId: req.params.id, metadata: { communicated: false } }
     });
-    return res.redirect('/admin/tournaments');
+    return res.redirect(`/admin/tournaments/${req.params.id}/edit?saved=changes`);
   } catch (error) {
     return renderForm(res.status(400), { tournament: { ...req.body, id: req.params.id }, games: await listGames(), error: error.message });
   }
@@ -133,14 +140,27 @@ async function transition(req, res, next) {
     const nextStatus = req.body.status;
     if (!tournament || !transitions[tournament.status]?.includes(nextStatus)) return res.status(400).render('500', { title: 'Invalid tournament transition' });
     if (nextStatus === 'PUBLISHED') {
-      const required = ['name', 'format', 'gameId', 'currency', 'terms', 'prizeInformation'];
-      if (required.some((field) => !tournament[field]) || tournament.endsAt <= tournament.startsAt) return res.status(400).render('500', { title: 'Tournament is missing mandatory settings' });
+      const required = ['code', 'name', 'imageUrl', 'format', 'gameId', 'currency', 'terms', 'prizeInformation'];
+      const missingRequiredField = required.some((field) => !String(tournament[field] || '').trim());
+      const invalidDates = tournament.registrationOpensAt >= tournament.registrationDeadline ||
+        tournament.registrationDeadline > tournament.startsAt || tournament.startsAt >= tournament.endsAt;
+      const invalidCapacity = !Number.isInteger(tournament.capacity) || tournament.capacity < 1;
+      const paymentDetailsMissing = Number(tournament.entryFee) > 0 && (
+        !tournament.paymentBankName || !tournament.paymentAccountName ||
+        !tournament.paymentAccountNumber || !tournament.paymentAccountType
+      );
+      if (missingRequiredField || invalidDates || invalidCapacity || paymentDetailsMissing) {
+        const error = paymentDetailsMissing
+          ? 'Bank transfer details are not configured. Contact an administrator before publishing this paid tournament.'
+          : 'Complete all required tournament details and check the dates and capacity before publishing.';
+        return renderForm(res.status(400), { tournament, games: await listGames(), error });
+      }
     }
     await updateTournament(tournament.id, { status: nextStatus, publishedAt: nextStatus === 'PUBLISHED' ? new Date() : tournament.publishedAt });
     await prisma.auditLog.create({
       data: { actorId: req.session.user.id, action: `TOURNAMENT_${nextStatus}`, entity: 'Tournament', entityId: tournament.id, metadata: { from: tournament.status, to: nextStatus } }
     });
-    return res.redirect('/admin/tournaments');
+    return res.redirect(nextStatus === 'PUBLISHED' ? `/tournaments/${tournament.id}` : '/admin/tournaments');
   } catch (error) {
     return next(error);
   }
@@ -174,4 +194,4 @@ async function createMatch(req, res, next) {
   } catch (error) { return next(error); }
 }
 
-module.exports = { index, newTournament, edit, create, update, transition, competition, createMatch };
+module.exports = { index, newTournament, edit, create, update, transition, competition, createMatch, tournamentData };

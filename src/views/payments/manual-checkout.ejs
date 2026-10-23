@@ -1,0 +1,42 @@
+<%- include('../partials/dashboard-header', { title, active: 'dashboard' }) %>
+<a class="back-link" href="/registrations/<%= registration.id %>">← Back to registration</a>
+<section class="detail-panel checkout-box">
+  <span class="eyebrow">Bank transfer payment</span>
+  <h1>Complete your payment</h1>
+  <p>Transfer the registration fee below and use the reference shown so the payment can be matched to your registration.</p>
+
+  <dl class="detail-list">
+    <div>
+      <dt>Amount</dt>
+      <dd><strong><%= paymentAmount %> <%= paymentCurrency %></strong></dd>
+    </div>
+    <div>
+      <dt>Bank</dt>
+      <dd><%= tournament.paymentBankName %></dd>
+    </div>
+    <div>
+      <dt>Account name</dt>
+      <dd><%= tournament.paymentAccountName %></dd>
+    </div>
+    <div>
+      <dt>Account number</dt>
+      <dd><%= tournament.paymentAccountNumber %></dd>
+    </div>
+    <div>
+      <dt>Account type</dt>
+      <dd><%= tournament.paymentAccountType %></dd>
+    </div>
+    <div>
+      <dt>Payment reference</dt>
+      <dd><strong><%= paymentReference %></strong></dd>
+    </div>
+  </dl>
+
+  <% if (tournament.paymentInstructions) { %>
+    <p><strong>Instructions:</strong> <%= tournament.paymentInstructions %></p>
+  <% } %>
+
+  <p class="muted">After you send the transfer, the organiser will confirm your payment and activate your tournament entry.</p>
+  <a class="button" href="/registrations/<%= registration.id %>">Return to registration</a>
+</section>
+<%- include('../partials/dashboard-footer') %>
