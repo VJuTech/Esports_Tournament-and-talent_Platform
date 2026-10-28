@@ -10,8 +10,51 @@ async function notifications(req, res, next) {
 async function users(req, res, next) {
   try {
     const records = await prisma.user.findMany({ select: { id: true, displayName: true, email: true, role: true, accountStatus: true, createdAt: true }, orderBy: { createdAt: 'desc' }, take: 200 });
-    return res.render('admin/records', { title: 'User accounts', heading: 'Authorized accounts', records, columns: ['displayName', 'email', 'role', 'accountStatus'] });
+    return res.render('admin/records', { title: 'User accounts', heading: 'Authorized accounts', records, columns: ['displayName', 'email', 'role', 'accountStatus'], showUserActions: true, error: req.query.error || null, notice: req.query.updated ? 'Account status updated.' : null });
   } catch (error) { return next(error); }
+}
+
+async function updateUserAccount(req, res, next) {
+  try {
+    const user = await prisma.user.findUnique({
+      where: { id: req.params.id },
+      select: { id: true, accountStatus: true }
+    });
+    if (!user) return res.status(404).redirect('/admin/users?error=User%20not%20found');
+    if (user.id === req.session.user.id) {
+      return res.status(400).redirect('/admin/users?error=You%20cannot%20change%20your%20own%20account');
+    }
+
+    const transitions = {
+      suspend: { from: 'ACTIVE', to: 'SUSPENDED', action: 'USER_SUSPENDED' },
+      unsuspend: { from: 'SUSPENDED', to: 'ACTIVE', action: 'USER_UNSUSPENDED' },
+      delete: { from: ['ACTIVE', 'SUSPENDED'], to: 'DISABLED', action: 'USER_DELETED' }
+    };
+    const transition = transitions[req.params.action];
+    const allowedFrom = Array.isArray(transition?.from) ? transition.from : [transition?.from];
+    if (!transition || !allowedFrom.includes(user.accountStatus)) {
+      return res.status(400).redirect('/admin/users?error=That%20account%20action%20is%20not%20available');
+    }
+
+    await prisma.$transaction([
+      prisma.user.update({
+        where: { id: user.id },
+        data: { accountStatus: transition.to, sessionVersion: { increment: 1 } }
+      }),
+      prisma.auditLog.create({
+        data: {
+          actorId: req.session.user.id,
+          action: transition.action,
+          entity: 'User',
+          entityId: user.id,
+          metadata: { previousStatus: user.accountStatus, accountStatus: transition.to }
+        }
+      })
+    ]);
+    return res.redirect('/admin/users?updated=true');
+  } catch (error) {
+    return next(error);
+  }
 }
 
 async function auditLogs(req, res, next) {
@@ -32,8 +75,28 @@ async function report(req, res, next) {
 
 async function registrations(req, res, next) {
   try {
-    const records = await prisma.registration.findMany({ include: { user: true, tournament: true }, orderBy: { createdAt: 'desc' }, take: 200 });
-    return res.render('admin/records', { title: 'Registrations', heading: 'Participant registrations', records, columns: ['id', 'status', 'tournamentNumber', 'createdAt'] });
+    const registrations = await prisma.registration.findMany({
+      include: {
+        user: true,
+        tournament: true,
+        payment: true,
+        paymentAttempts: { orderBy: { createdAt: 'desc' }, take: 1 }
+      },
+      orderBy: { createdAt: 'desc' },
+      take: 200
+    });
+    const records = registrations.map((registration) => ({
+      ...registration,
+      player: registration.user.displayName,
+      tournamentName: registration.tournament.name,
+      paymentStatus: registration.payment?.status || registration.paymentAttempts[0]?.status || 'NOT_STARTED'
+    }));
+    return res.render('admin/records', {
+      title: 'Registrations',
+      heading: 'Participant registrations',
+      records,
+      columns: ['player', 'tournamentName', 'status', 'paymentStatus', 'tournamentNumber', 'createdAt']
+    });
   } catch (error) { return next(error); }
 }
 
@@ -51,4 +114,4 @@ async function matches(req, res, next) {
   } catch (error) { return next(error); }
 }
 
-module.exports = { notifications, users, auditLogs, report, registrations, receipts, matches };
+module.exports = { notifications, users, updateUserAccount, auditLogs, report, registrations, receipts, matches };

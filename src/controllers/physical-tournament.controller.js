@@ -28,8 +28,12 @@ async function publicBracket(req, res, next) {
 async function publicTimetable(req, res, next) {
   try {
     const tournament = await prisma.tournament.findUnique({ where: { id: req.params.id }, include: { game: true, timetable: true, matches: { include: { participants: { include: { user: true } } }, orderBy: { scheduledAt: 'asc' } } } });
-    if (!tournament || !tournament.timetable?.publishedAt) return res.status(404).render('404', { title: 'Timetable not available' });
-    return res.render('tournaments/timetable', { title: `${tournament.name} timetable`, tournament });
+    if (!tournament || tournament.status === 'DRAFT') return res.status(404).render('404', { title: 'Tournament not found' });
+    return res.render('tournaments/timetable', {
+      title: `${tournament.name} timetable`,
+      tournament,
+      timetablePublished: Boolean(tournament.timetable?.publishedAt)
+    });
   } catch (error) { return next(error); }
 }
 

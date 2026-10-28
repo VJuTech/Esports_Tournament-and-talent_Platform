@@ -148,6 +148,7 @@ html { scroll-behavior:smooth; }
 .tournament-card h2,.tournament-card p,.tournament-card-meta span,.tournament-hero h1,.tournament-hero p,.tournament-code strong,.detail-list dd { overflow-wrap:anywhere; }
 .tournament-card-meta { flex-wrap:wrap; gap:.75rem; }
 .detail-layout { grid-template-columns:minmax(0,2fr) minmax(0,1fr); }
+.feature-card,.dashboard-card,.panel,.message-card,.auth-card,.detail-panel,.register-panel,.registration-card,.receipt-paper,.live-stream-card,.tournament-card { color:var(--ink); }
 @media (max-width:760px) {
 	.tournament-grid,.detail-layout { grid-template-columns:minmax(0,1fr); }
 	.tournament-card-meta { align-items:flex-start; flex-direction:column; }

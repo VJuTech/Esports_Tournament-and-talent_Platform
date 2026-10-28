@@ -26,6 +26,7 @@ router.get('/live', managersOnly, liveController.adminIndex);
 router.post('/payments/:id/refund', financeOnly, financeController.refund);
 router.post('/payments/:id/verify-bank-transfer', financeOnly, financeController.verifyBankTransfer);
 router.get('/users', requireRole('SUPER_ADMIN'), operationsController.users);
+router.post('/users/:id/:action', requireRole('SUPER_ADMIN'), operationsController.updateUserAccount);
 router.get('/users/officials/new', requireRole('SUPER_ADMIN'), officialController.newOfficial);
 router.post('/users/officials', requireRole('SUPER_ADMIN'), officialController.createOfficial);
 router.get('/audit-logs', requireRole('SUPER_ADMIN'), operationsController.auditLogs);
