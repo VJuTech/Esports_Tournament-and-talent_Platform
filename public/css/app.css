@@ -138,6 +138,7 @@
 .official-live-section-disabled p { color:#8993a5; }
 @media (max-width:760px) { .official-live-section { align-items:flex-start; flex-direction:column; } .official-live-actions { justify-content:flex-start; } }
 html { scroll-behavior:smooth; }
+.verification-code { background:#f7f3ff; border:1px dashed var(--purple); border-radius:8px; color:var(--purple-dark); font-family:monospace; font-size:2rem; font-weight:700; margin:1.5rem auto; max-width:260px; padding:1rem; text-align:center; }
 .scroll-cue { text-decoration:none; }
 .scroll-cue:hover,.scroll-cue:focus-visible { color:#fff; }
 #platform-overview { scroll-margin-top:1rem; }

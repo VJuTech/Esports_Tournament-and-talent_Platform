@@ -1,3 +1,10 @@
 <%- include('../partials/header', { title }) %>
-<section class="message-card"><span class="eyebrow">One last step</span><h1>Verify your email.</h1><p>We sent a verification link to <strong><%= email || 'your email address' %></strong>. Verify your address before opening restricted account features.</p><a class="button" href="/auth/login">Return to sign in</a></section>
+<section class="message-card"><span class="eyebrow">One last step</span><h1>Verify your email.</h1>
+	<% if (error) { %><p class="alert alert-error" role="alert"><%= error %></p><% } %>
+	<% if (notice) { %><p class="alert alert-success" role="status"><%= notice %></p><% } %>
+	<% if (verificationCode) { %><p>Enter the six-digit verification code for <strong><%= email %></strong>.</p><div class="verification-code"><%= verificationCode %></div><p class="muted">Development code, valid for 15 minutes.</p><% } else if (emailDeliveryWarning) { %><p class="alert alert-error" role="alert"><%= emailDeliveryWarning %></p><% } else { %><p>Enter the six-digit code sent to <strong><%= email || 'your email address' %></strong>.</p><% } %>
+	<% if (!emailDeliveryWarning) { %><form method="post" action="/auth/verify-code" class="form-grid"><input type="hidden" name="email" value="<%= email || '' %>"><label>Verification code<input name="code" inputmode="numeric" autocomplete="one-time-code" pattern="[0-9]{6}" minlength="6" maxlength="6" required></label><button class="button" type="submit">Verify email <span>→</span></button></form><% } %>
+	<form method="post" action="/auth/resend-verification"><input type="hidden" name="email" value="<%= email || '' %>"><button class="button button-secondary" type="submit">Generate a new code</button></form>
+	<a class="button button-secondary" href="/auth/login">Return to sign in</a>
+</section>
 <%- include('../partials/footer') %>
