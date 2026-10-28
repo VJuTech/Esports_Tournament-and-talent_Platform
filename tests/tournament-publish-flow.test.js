@@ -26,6 +26,29 @@ describe('tournament draft and publish flow', () => {
     vi.clearAllMocks();
   });
 
+  it('converts browser-local tournament dates to the matching UTC instants', () => {
+    const data = controller.tournamentData({
+      code: 'local-time',
+      name: 'Local Time Tournament',
+      format: 'SINGLE_ELIMINATION',
+      participationType: 'INDIVIDUAL',
+      entryFee: '0',
+      currency: 'NGN',
+      registrationOpensAt: '2026-10-28T10:00',
+      registrationDeadline: '2026-10-28T11:00',
+      startsAt: '2026-10-28T12:00',
+      endsAt: '2026-10-28T13:00',
+      capacity: '16',
+      gameId: 'game-1',
+      clientTimezoneOffsetMinutes: '-60'
+    }, 'manager-1', '/media/image-1');
+
+    expect(data.registrationOpensAt.toISOString()).toBe('2026-10-28T09:00:00.000Z');
+    expect(data.registrationDeadline.toISOString()).toBe('2026-10-28T10:00:00.000Z');
+    expect(data.startsAt.toISOString()).toBe('2026-10-28T11:00:00.000Z');
+    expect(data.endsAt.toISOString()).toBe('2026-10-28T12:00:00.000Z');
+  });
+
   it('saves the completed form as a draft and opens its editor', async () => {
     mocks.storeImage.mockResolvedValue('/media/image-1');
     mocks.createTournament.mockResolvedValue({ id: 'tournament-1' });

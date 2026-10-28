@@ -5,7 +5,14 @@ async function create(req, res, next) {
     const tournament = await prisma.tournament.findUnique({ where: { id: req.body.tournamentId } });
     if (!tournament || tournament.status !== 'PUBLISHED') return res.status(400).redirect(`/tournaments/${req.body.tournamentId}?error=Tournament%20is%20not%20open`);
     const now = new Date();
-    if (now < tournament.registrationOpensAt || now > tournament.registrationDeadline) return res.status(400).redirect(`/tournaments/${tournament.id}?error=Registration%20is%20closed`);
+    if (now < tournament.registrationOpensAt) {
+      const opensAt = tournament.registrationOpensAt.toLocaleString();
+      return res.status(400).redirect(`/tournaments/${tournament.id}?error=${encodeURIComponent(`Registration opens on ${opensAt}`)}`);
+    }
+    if (now > tournament.registrationDeadline) {
+      const deadline = tournament.registrationDeadline.toLocaleString();
+      return res.status(400).redirect(`/tournaments/${tournament.id}?error=${encodeURIComponent(`Registration closed on ${deadline}`)}`);
+    }
     const eligibleProfile = await prisma.gameProfile.findUnique({ where: { userId_gameId: { userId: req.session.user.id, gameId: tournament.gameId } } });
     if (!eligibleProfile) return res.status(400).redirect(`/tournaments/${tournament.id}?error=${encodeURIComponent('Add your game profile before registering')}`);
     let teamId = null;

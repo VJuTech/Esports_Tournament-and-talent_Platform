@@ -12,17 +12,33 @@ const transitions = {
 };
 const supportedCurrencies = new Set(['NGN', 'USD', 'GBP', 'EUR', 'ZAR', 'GHS', 'KES']);
 
-function parseDate(value) {
+function parseDate(value, timezoneOffsetMinutes = 0) {
+  const localDateTime = typeof value === 'string' && value.match(/^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})(?::(\d{2})(?:\.(\d{1,3}))?)?$/);
+  if (localDateTime) {
+    const offset = Number(timezoneOffsetMinutes);
+    const safeOffset = Number.isInteger(offset) && Math.abs(offset) <= 840 ? offset : 0;
+    const [, year, month, day, hour, minute, second = '0', millisecond = '0'] = localDateTime;
+    return new Date(Date.UTC(
+      Number(year),
+      Number(month) - 1,
+      Number(day),
+      Number(hour),
+      Number(minute),
+      Number(second),
+      Number(millisecond.padEnd(3, '0'))
+    ) + safeOffset * 60 * 1000);
+  }
   const date = new Date(value);
   if (!value || Number.isNaN(date.getTime())) throw new Error('Invalid date');
   return date;
 }
 
 function tournamentData(body, userId, imageUrl) {
-  const registrationOpensAt = parseDate(body.registrationOpensAt);
-  const registrationDeadline = parseDate(body.registrationDeadline);
-  const startsAt = parseDate(body.startsAt);
-  const endsAt = parseDate(body.endsAt);
+  const timezoneOffsetMinutes = body.clientTimezoneOffsetMinutes;
+  const registrationOpensAt = parseDate(body.registrationOpensAt, timezoneOffsetMinutes);
+  const registrationDeadline = parseDate(body.registrationDeadline, timezoneOffsetMinutes);
+  const startsAt = parseDate(body.startsAt, timezoneOffsetMinutes);
+  const endsAt = parseDate(body.endsAt, timezoneOffsetMinutes);
   const entryFee = Number(body.entryFee);
   const capacity = Number(body.capacity);
   const minimumAge = body.eligibilityMinimumAge ? Number(body.eligibilityMinimumAge) : null;
@@ -57,7 +73,7 @@ function tournamentData(body, userId, imageUrl) {
     prizeInformation: body.prizeInformation?.trim() || null,
     refundPolicy: body.refundPolicy?.trim() || null,
     terms: body.terms?.trim() || null,
-    disputeDeadline: body.disputeDeadline ? parseDate(body.disputeDeadline) : null,
+    disputeDeadline: body.disputeDeadline ? parseDate(body.disputeDeadline, timezoneOffsetMinutes) : null,
     gameId: body.gameId,
     createdById: userId
   };
