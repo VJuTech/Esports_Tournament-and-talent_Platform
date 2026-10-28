@@ -263,11 +263,11 @@ model Tournament {
   prizeInformation        String?
   refundPolicy            String?
   terms                   String?
-  paymentBankName         String?
-  paymentAccountName      String?
-  paymentAccountNumber    String?
-  paymentAccountType      String?
-  paymentInstructions     String?
+  paymentBankName         String?           @default("Palmpay")
+  paymentAccountName      String?           @default("VJU TECH LIMITED.")
+  paymentAccountNumber    String?           @default("8943931330")
+  paymentAccountType      String?           @default("CURRENT")
+  paymentInstructions     String?           @default("Please include your tournament code or registration name in the transfer narration for confirmation.")
   disputeDeadline         DateTime?
   status                  TournamentStatus @default(DRAFT)
   gameId                  String

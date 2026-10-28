@@ -64,7 +64,7 @@
 .participant-row strong,.participant-row small { display:block; }
 .participant-row small { color:var(--muted); font-size:.75rem; margin-top:.25rem; }
 .participant-row>span { color:var(--purple); font-family:'Space Grotesk'; font-size:.85rem; font-weight:700; }
-.checkout-box { background:#f4f0ff; border-radius:10px; margin-top:1.5rem; padding:1.25rem; }
+.checkout-box { background:#f4f0ff; border-radius:10px; color:var(--ink); margin-top:1.5rem; padding:1.25rem; }
 .checkout-box strong { color:var(--purple-dark); display:block; font-family:'Space Grotesk'; }
 .checkout-box p { color:var(--muted); font-size:.88rem; line-height:1.6; margin:.5rem 0 1rem; }
 .payment-table .admin-table-row { grid-template-columns:2fr 1.4fr 1fr 1fr 1.2fr; }
@@ -143,3 +143,14 @@ html { scroll-behavior:smooth; }
 .scroll-cue:hover,.scroll-cue:focus-visible { color:#fff; }
 #platform-overview { scroll-margin-top:1rem; }
 @media (prefers-reduced-motion:reduce) { html { scroll-behavior:auto; } }
+.tournament-grid { grid-template-columns:repeat(2,minmax(0,1fr)); min-width:0; }
+.tournament-card,.detail-layout>*,.tournament-hero>div { min-width:0; }
+.tournament-card h2,.tournament-card p,.tournament-card-meta span,.tournament-hero h1,.tournament-hero p,.tournament-code strong,.detail-list dd { overflow-wrap:anywhere; }
+.tournament-card-meta { flex-wrap:wrap; gap:.75rem; }
+.detail-layout { grid-template-columns:minmax(0,2fr) minmax(0,1fr); }
+@media (max-width:760px) {
+	.tournament-grid,.detail-layout { grid-template-columns:minmax(0,1fr); }
+	.tournament-card-meta { align-items:flex-start; flex-direction:column; }
+	.detail-list>div { align-items:flex-start; gap:.75rem; }
+	.detail-list dd { max-width:65%; text-align:right; }
+}

@@ -16,18 +16,24 @@ async function checkout(req, res, next) {
     if (new Date() > registration.tournament.registrationDeadline) {
       return res.status(400).redirect(`/registrations/${registration.id}?error=Registration%20deadline%20has%20passed`);
     }
-    const reference = createProviderReference();
-    const attempt = await prisma.paymentAttempt.create({
-      data: {
-        registrationId: registration.id,
-        providerReference: reference,
-        amount: registration.feeAmount,
-        currency: registration.feeCurrency,
-        provider: 'BANK_TRANSFER',
-        status: 'PENDING',
-        providerPayload: { method: 'BANK_TRANSFER' }
-      }
+    let attempt = await prisma.paymentAttempt.findFirst({
+      where: { registrationId: registration.id, provider: 'BANK_TRANSFER', status: { in: ['PENDING', 'PROCESSING'] } },
+      orderBy: { createdAt: 'desc' }
     });
+    if (!attempt) {
+      const reference = createProviderReference();
+      attempt = await prisma.paymentAttempt.create({
+        data: {
+          registrationId: registration.id,
+          providerReference: reference,
+          amount: registration.feeAmount,
+          currency: registration.feeCurrency,
+          provider: 'BANK_TRANSFER',
+          status: 'PENDING',
+          providerPayload: { method: 'BANK_TRANSFER' }
+        }
+      });
+    }
 
     const tournament = registration.tournament;
     if (!tournament.paymentBankName || !tournament.paymentAccountName || !tournament.paymentAccountNumber || !tournament.paymentAccountType) {
@@ -43,11 +49,58 @@ async function checkout(req, res, next) {
       registration,
       attempt,
       tournament,
-      reference,
+      reference: attempt.providerReference,
       paymentAmount: registration.feeAmount,
       paymentCurrency: registration.feeCurrency,
       paymentReference: `${tournament.code}-${registration.id.slice(0, 8).toUpperCase()}`
     });
+  } catch (error) {
+    return next(error);
+  }
+}
+
+async function reportBankTransfer(req, res, next) {
+  try {
+    const attempt = await prisma.paymentAttempt.findFirst({
+      where: {
+        id: req.body.attemptId,
+        registrationId: req.params.registrationId,
+        provider: 'BANK_TRANSFER',
+        registration: { is: { userId: req.session.user.id } }
+      },
+      include: { registration: true }
+    });
+    if (!attempt) return res.status(404).render('404', { title: 'Payment attempt not found' });
+    if (attempt.status === 'PROCESSING') return res.redirect(`/registrations/${attempt.registrationId}?payment=reported`);
+    if (attempt.status !== 'PENDING') {
+      return res.status(400).redirect(`/registrations/${attempt.registrationId}?error=${encodeURIComponent('This payment attempt is no longer active.')}`);
+    }
+
+    const transferReference = String(req.body.transferReference || '').trim().slice(0, 120);
+    const reportedAt = new Date();
+    await prisma.$transaction([
+      prisma.paymentAttempt.update({
+        where: { id: attempt.id },
+        data: {
+          status: 'PROCESSING',
+          providerPayload: {
+            method: 'BANK_TRANSFER',
+            playerReportedAt: reportedAt.toISOString(),
+            transferReference: transferReference || null
+          }
+        }
+      }),
+      prisma.auditLog.create({
+        data: {
+          actorId: req.session.user.id,
+          action: 'BANK_TRANSFER_PAYMENT_REPORTED',
+          entity: 'PaymentAttempt',
+          entityId: attempt.id,
+          metadata: { registrationId: attempt.registrationId, transferReference: transferReference || null }
+        }
+      })
+    ]);
+    return res.redirect(`/registrations/${attempt.registrationId}?payment=reported`);
   } catch (error) {
     return next(error);
   }
@@ -98,4 +151,4 @@ async function webhook(req, res) {
   return res.status(200).json({ received: true });
 }
 
-module.exports = { checkout, paymentReturn, webhook };
+module.exports = { checkout, reportBankTransfer, paymentReturn, webhook };

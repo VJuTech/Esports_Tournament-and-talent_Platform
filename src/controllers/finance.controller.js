@@ -1,5 +1,7 @@
 const { prisma } = require('../config/database');
 const { providerRequest } = require('../services/payment.service');
+const { confirmPaidRegistration } = require('../services/registration.service');
+const { deliverReceipt } = require('../services/receipt.service');
 
 async function index(req, res, next) {
   try {
@@ -35,4 +37,44 @@ async function refund(req, res, next) {
   }
 }
 
-module.exports = { index, refund };
+async function verifyBankTransfer(req, res, next) {
+  try {
+    const attempt = await prisma.paymentAttempt.findUnique({
+      where: { id: req.params.id },
+      include: { registration: true }
+    });
+    if (!attempt || attempt.provider !== 'BANK_TRANSFER' || attempt.status !== 'PROCESSING') {
+      return res.status(400).redirect('/admin/payments?error=Transfer%20is%20not%20awaiting%20verification');
+    }
+
+    const registration = await confirmPaidRegistration({
+      tournamentId: attempt.registration.tournamentId,
+      userId: attempt.registration.userId,
+      providerReference: attempt.providerReference,
+      amount: String(attempt.amount),
+      currency: attempt.currency
+    });
+    await prisma.$transaction([
+      prisma.paymentAttempt.update({
+        where: { id: attempt.id },
+        data: { status: 'VERIFIED', verifiedAt: new Date() }
+      }),
+      prisma.auditLog.create({
+        data: {
+          actorId: req.session.user.id,
+          action: 'BANK_TRANSFER_PAYMENT_VERIFIED',
+          entity: 'PaymentAttempt',
+          entityId: attempt.id,
+          metadata: { registrationId: registration.id, providerReference: attempt.providerReference }
+        }
+      })
+    ]);
+    const receipt = await prisma.receipt.findUnique({ where: { registrationId: registration.id } });
+    if (receipt) await deliverReceipt(receipt.id);
+    return res.redirect('/admin/payments?verified=true');
+  } catch (error) {
+    return next(error);
+  }
+}
+
+module.exports = { index, refund, verifyBankTransfer };

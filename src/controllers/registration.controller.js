@@ -66,7 +66,12 @@ async function show(req, res, next) {
       include: { tournament: { include: { game: true } }, payment: true, paymentAttempts: true, receipt: true }
     });
     if (!registration) return res.status(404).render('404', { title: 'Registration not found' });
-    return res.render('registrations/show', { title: 'Registration details', registration, error: req.query.error || null });
+    return res.render('registrations/show', {
+      title: 'Registration details',
+      registration,
+      error: req.query.error || null,
+      paymentNotice: req.query.payment === 'reported'
+    });
   } catch (error) {
     return next(error);
   }

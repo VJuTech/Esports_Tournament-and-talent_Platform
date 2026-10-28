@@ -36,7 +36,16 @@
     <p><strong>Instructions:</strong> <%= tournament.paymentInstructions %></p>
   <% } %>
 
-  <p class="muted">After you send the transfer, the organiser will confirm your payment and activate your tournament entry.</p>
-  <a class="button" href="/registrations/<%= registration.id %>">Return to registration</a>
+  <% if (attempt.status === 'PROCESSING') { %>
+    <p class="alert alert-success" role="status">Your payment has been reported and is awaiting finance confirmation. Your registration will be confirmed after the transfer is verified.</p>
+  <% } else { %>
+    <p class="muted">After transferring the fee, report it below. Your entry is confirmed only after finance verifies the transfer.</p>
+    <form method="post" action="/payments/checkout/<%= registration.id %>/confirm" class="form-grid">
+      <input type="hidden" name="attemptId" value="<%= attempt.id %>">
+      <label>Bank transfer reference (optional)<input name="transferReference" maxlength="120" autocomplete="off"></label>
+      <button class="button" type="submit">I have made Payment</button>
+    </form>
+  <% } %>
+  <a class="button button-secondary" href="/registrations/<%= registration.id %>">Return to registration</a>
 </section>
 <%- include('../partials/dashboard-footer') %>
